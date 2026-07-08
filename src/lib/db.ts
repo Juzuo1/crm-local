@@ -2,6 +2,8 @@ import fs from 'fs';
 import path from 'path';
 import bcrypt from 'bcryptjs';
 import { DEFAULT_ROLE_PERMISSIONS, RolePermissions, RolePermissionConfig, DataScope } from './permissions';
+import type { AuditLog } from './audit';
+import { writeAuditLog, buildChangeDetail } from './audit';
 
 const DB_DIR = path.resolve('./data');
 const DB_FILE = path.join(DB_DIR, 'crm.json');
@@ -14,6 +16,69 @@ interface Database {
   segments: Segment[];
   departments: Department[];
   role_permissions: RolePermissions;
+  audit_logs: AuditLog[];
+  sea_pool_rules: SeaPoolRules;
+}
+
+const DEFAULT_SEA_POOL_RULES: SeaPoolRules = {
+  enabled: true,
+  days_to_fall: 7,
+  excluded_stages: ['completed', 'lost'],
+  claim_limit_per_day: 3,
+};
+
+// ============================================================
+// 审计日志
+// ============================================================
+
+export function addAuditLog(entry: {
+  user_id: number;
+  user_name: string;
+  action: string;
+  target_type: AuditLog['target_type'];
+  target_id: number;
+  target_name: string;
+  detail: Record<string, unknown>;
+}): void {
+  const data = loadDb();
+  if (!data.audit_logs) data.audit_logs = [];
+  writeAuditLog(data.audit_logs, entry);
+  saveDb();
+}
+
+export function listAuditLogs(filters: {
+  userId?: number;
+  action?: string;
+  targetType?: string;
+  days?: number;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+}): { data: AuditLog[]; total: number } {
+  const data = loadDb();
+  if (!data.audit_logs) data.audit_logs = [];
+  // 延迟导入避免循环
+  const { filterAuditLogs } = require('./audit');
+  return filterAuditLogs(data.audit_logs, filters);
+}
+
+/** 获取客户当前值（审计用） */
+export function getCustomerSnapshot(id: number): Record<string, unknown> | null {
+  const data = loadDb();
+  const c = data.customers.find(x => x.id === id && !x.deleted_at);
+  if (!c) return null;
+  const { ...rest } = c as unknown as Record<string, unknown>;
+  delete (rest as Record<string, unknown>).password_hash;
+  return rest;
+}
+
+/** 获取用户当前值（审计用） */
+export function getUserSnapshot(id: number): Record<string, unknown> | null {
+  const data = loadDb();
+  const u = data.users.find(x => x.id === id);
+  if (!u) return null;
+  const { password_hash, ...rest } = u as unknown as Record<string, unknown>;
+  return rest;
 }
 
 // ============================================================
@@ -124,6 +189,15 @@ export interface Customer {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  sea_pool_entered_at: string | null;
+  sea_pool_claimed_at: string | null;
+}
+
+export interface SeaPoolRules {
+  enabled: boolean;
+  days_to_fall: number;
+  excluded_stages: string[];
+  claim_limit_per_day: number;
 }
 
 export interface Followup {
@@ -153,14 +227,22 @@ function loadDb(): Database {
     const raw = fs.readFileSync(DB_FILE, 'utf-8');
     db = JSON.parse(raw);
   } else {
-    db = { users: [], customers: [], followups: [], segments: [], departments: [], role_permissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)) };
+    db = { users: [], customers: [], followups: [], segments: [], departments: [], role_permissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)), audit_logs: [], sea_pool_rules: { ...DEFAULT_SEA_POOL_RULES } };
     saveDb();
   }
 
+  // Ensure db is not null
+  const database = db!;
+
+  // Initialize sea_pool_rules if missing (migration)
+  if (!database.sea_pool_rules) {
+    database.sea_pool_rules = { ...DEFAULT_SEA_POOL_RULES };
+  }
+
   // 种子管理员
-  if (db.users.length === 0) {
+  if (database.users.length === 0) {
     const hash = bcrypt.hashSync('admin123', 10);
-    db.users.push({
+    database.users.push({
       id: 1,
       name: '管理员',
       email: 'admin@crm.local',
@@ -173,7 +255,7 @@ function loadDb(): Database {
     saveDb();
   }
 
-  return db;
+  return database;
 }
 
 function saveDb(): void {
@@ -422,6 +504,8 @@ export function createCustomer(input: Partial<Customer> & { contact_name: string
     created_at: now(),
     updated_at: now(),
     deleted_at: null,
+    sea_pool_entered_at: null,
+    sea_pool_claimed_at: null,
   };
   data.customers.push(customer);
   saveDb();
@@ -902,4 +986,198 @@ export function updateRolePermissions(permissions: RolePermissions): void {
   const data = loadDb();
   data.role_permissions = permissions;
   saveDb();
+}
+
+// ============================================================
+// 公海客户管理
+// ============================================================
+
+/** 获取公海规则 */
+export function getSeaPoolRules(): SeaPoolRules {
+  const data = loadDb();
+  if (!data.sea_pool_rules) {
+    data.sea_pool_rules = { ...DEFAULT_SEA_POOL_RULES };
+    saveDb();
+  }
+  return data.sea_pool_rules;
+}
+
+/** 更新公海规则 */
+export function updateSeaPoolRules(updates: Partial<SeaPoolRules>): void {
+  const data = loadDb();
+  data.sea_pool_rules = { ...data.sea_pool_rules, ...updates };
+  saveDb();
+}
+
+/** 判定客户是否在公海中 */
+export function isInSeaPool(customer: Customer): boolean {
+  if (customer.deleted_at) return false;
+  if (customer.assigned_to !== null) return false;
+  const rules = getSeaPoolRules();
+  if (rules.excluded_stages.includes(customer.stage)) return false;
+  return true;
+}
+
+/** 获取公海客户列表 */
+export function listSeaPoolCustomers(filters: {
+  search?: string;
+  country?: string;
+  channel?: string;
+  level?: string;
+  page?: number;
+  pageSize?: number;
+}): { data: Customer[]; total: number; stats: { total: number; weekFell: number; todayClaimed: number } } {
+  const data = loadDb();
+  const rules = getSeaPoolRules();
+
+  // 公海客户：assigned_to=null, not deleted, not excluded stage
+  let pool = data.customers.filter(c => isInSeaPool(c));
+
+  // 统计
+  const total = pool.length;
+
+  const weekAgo = new Date();
+  weekAgo.setDate(weekAgo.getDate() - 7);
+  const weekAgoStr = weekAgo.toISOString().replace('T', ' ').slice(0, 19);
+  const weekFell = pool.filter(c =>
+    c.sea_pool_entered_at && c.sea_pool_entered_at >= weekAgoStr
+  ).length;
+
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayClaimed = pool.filter(c =>
+    c.sea_pool_claimed_at && c.sea_pool_claimed_at.slice(0, 10) === todayStr
+  ).length;
+
+  // 过滤
+  if (filters.search) {
+    const s = filters.search.toLowerCase();
+    pool = pool.filter(c =>
+      c.contact_name.toLowerCase().includes(s) ||
+      (c.company_name && c.company_name.toLowerCase().includes(s)) ||
+      (c.email && c.email.toLowerCase().includes(s))
+    );
+  }
+  if (filters.country) {
+    pool = pool.filter(c => c.country === filters.country);
+  }
+  if (filters.channel) {
+    pool = pool.filter(c => c.source_channel === filters.channel);
+  }
+  if (filters.level) {
+    pool = pool.filter(c => c.customer_level === filters.level);
+  }
+
+  // 按掉入时间倒序
+  pool.sort((a, b) => {
+    const ta = a.sea_pool_entered_at || a.created_at;
+    const tb = b.sea_pool_entered_at || b.created_at;
+    return tb.localeCompare(ta);
+  });
+
+  const page = filters.page || 1;
+  const pageSize = filters.pageSize || 20;
+  const paged = pool.slice((page - 1) * pageSize, page * pageSize);
+
+  return { data: paged, total, stats: { total, weekFell, todayClaimed } };
+}
+
+/** 领取公海客户 */
+export function claimSeaCustomer(customerId: number, userId: number): { success: boolean; error?: string } {
+  const data = loadDb();
+  const customer = data.customers.find(c => c.id === customerId && !c.deleted_at);
+  if (!customer) return { success: false, error: '客户不存在' };
+  if (!isInSeaPool(customer)) return { success: false, error: '该客户不在公海中' };
+
+  const rules = getSeaPoolRules();
+
+  // 检查每日领取上限（管理员不限）
+  const claimer = data.users.find(u => u.id === userId);
+  if (claimer && claimer.role !== 'admin' && rules.claim_limit_per_day > 0) {
+    const todayStr = now().slice(0, 10);
+    const todayClaims = data.customers.filter(c =>
+      c.sea_pool_claimed_at && c.sea_pool_claimed_at.slice(0, 10) === todayStr &&
+      c.assigned_to === userId
+    ).length;
+    if (todayClaims >= rules.claim_limit_per_day) {
+      return { success: false, error: `今日领取已达上限（${rules.claim_limit_per_day}个/天）` };
+    }
+  }
+
+  customer.assigned_to = userId;
+  customer.sea_pool_claimed_at = now();
+  customer.updated_at = now();
+  saveDb();
+  return { success: true };
+}
+
+/** 推入公海（手动） */
+export function pushToSeaPool(customerIds: number[]): number {
+  const data = loadDb();
+  const rules = getSeaPoolRules();
+  let count = 0;
+
+  for (const cid of customerIds) {
+    const customer = data.customers.find(c => c.id === cid && !c.deleted_at);
+    if (customer && !rules.excluded_stages.includes(customer.stage)) {
+      customer.assigned_to = null;
+      customer.sea_pool_entered_at = now();
+      customer.sea_pool_claimed_at = null;
+      customer.updated_at = now();
+      count++;
+    }
+  }
+
+  if (count > 0) saveDb();
+  return count;
+}
+
+/** 自动掉公海检查：返回本次掉入的数量 */
+export function checkSeaPoolFall(): { fell: number; details: { id: number; name: string; former_assignee: string }[] } {
+  const data = loadDb();
+  const rules = getSeaPoolRules();
+  if (!rules.enabled) return { fell: 0, details: [] };
+
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - rules.days_to_fall);
+  const cutoffStr = cutoff.toISOString().replace('T', ' ').slice(0, 19);
+
+  const details: { id: number; name: string; former_assignee: string }[] = [];
+
+  for (const customer of data.customers) {
+    // 条件：有人负责 + 未删除 + 不在排除阶段
+    if (!customer.assigned_to) continue;
+    if (customer.deleted_at) continue;
+    if (rules.excluded_stages.includes(customer.stage)) continue;
+
+    // 从没跟进过 → 用建档时间比较；有跟进过 → 用最后跟进时间比较
+    const referenceTime = customer.last_followup_at || customer.created_at;
+    if (referenceTime < cutoffStr) {
+      const formerUser = data.users.find(u => u.id === customer.assigned_to);
+      details.push({
+        id: customer.id,
+        name: customer.contact_name,
+        former_assignee: formerUser?.name || '未知',
+      });
+
+      customer.assigned_to = null;
+      customer.sea_pool_entered_at = now();
+      customer.sea_pool_claimed_at = null;
+      customer.updated_at = now();
+    }
+  }
+
+  if (details.length > 0) saveDb();
+
+  return { fell: details.length, details };
+}
+
+/** 查询用户今日已领取公海客户数量 */
+export function getTodayClaimCount(userId: number): number {
+  const data = loadDb();
+  const todayStr = now().slice(0, 10);
+  return data.customers.filter(c =>
+    c.assigned_to === userId &&
+    c.sea_pool_claimed_at &&
+    c.sea_pool_claimed_at.slice(0, 10) === todayStr
+  ).length;
 }

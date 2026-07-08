@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listCustomers, createCustomer, listSegments, filterBySegment, listUsers, updateCustomer, resolveAccess, hasPermission } from '@/lib/db';
+import { listCustomers, createCustomer, listSegments, filterBySegment, listUsers, updateCustomer, resolveAccess, hasPermission, addAuditLog } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 // 获取客户列表
@@ -98,6 +98,18 @@ export async function PATCH(request: NextRequest) {
     count++;
   }
 
+  // 审计日志
+  const targetUser = assigned_to ? listUsers().find(u => u.id === assigned_to) : null;
+  addAuditLog({
+    user_id: user.id,
+    user_name: user.name,
+    action: 'customer.assign',
+    target_type: 'customer',
+    target_id: 0,
+    target_name: `${customer_ids.length}个客户 → ${targetUser?.name || '未分配'}`,
+    detail: { count: customer_ids.length, assigned_to: assigned_to || null, assigned_name: targetUser?.name || '未分配' },
+  });
+
   return NextResponse.json({ success: true, count });
 }
 
@@ -134,6 +146,17 @@ export async function POST(request: NextRequest) {
     assigned_to: assignedTo,
     next_followup_at: body.next_followup_at || null,
     created_by: user.id,
+  });
+
+  // 审计日志
+  addAuditLog({
+    user_id: user.id,
+    user_name: user.name,
+    action: 'customer.create',
+    target_type: 'customer',
+    target_id: customer.id,
+    target_name: body.contact_name,
+    detail: { contact_name: body.contact_name, company_name: body.company_name || '', country: body.country || '', source_channel: body.source_channel || '' },
   });
 
   return NextResponse.json({ success: true, id: customer.id });

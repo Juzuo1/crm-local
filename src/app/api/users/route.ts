@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { listUsers, createUser, findUserByEmail, hasPermission } from '@/lib/db';
+import { listUsers, createUser, findUserByEmail, hasPermission, addAuditLog } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import bcrypt from 'bcryptjs';
 
@@ -39,6 +39,17 @@ export async function POST(request: NextRequest) {
     role: role || 'agent',
     is_active: 1,
     department_id: null,
+  });
+
+  // 审计日志
+  addAuditLog({
+    user_id: admin.id,
+    user_name: admin.name,
+    action: 'user.create',
+    target_type: 'user',
+    target_id: 0,
+    target_name: name,
+    detail: { name, email, role: role || 'agent' },
   });
 
   return NextResponse.json({ success: true });

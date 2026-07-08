@@ -53,12 +53,14 @@ export default function Sidebar({ user }: { user: SessionUser }) {
       ],
     },
     { href: '/segments', label: '客群管理', icon: '📊', permKey: 'segments' },
+    { href: '/sea-pool', label: '公海客户', icon: '🌊', permKey: 'sea_pool' },
   ];
 
   const adminMenu: MenuItem[] = [
     { href: '/departments', label: '部门管理', icon: '🏢', permKey: 'departments' },
     { href: '/users', label: '用户管理', icon: '👤', permKey: 'users' },
     { href: '/roles', label: '角色管理', icon: '🔐', permKey: 'settings' },
+    { href: '/audit-logs', label: '操作日志', icon: '📜', permKey: 'audit' },
     { href: '/settings', label: '系统设置', icon: '⚙️', permKey: 'settings' },
   ];
 

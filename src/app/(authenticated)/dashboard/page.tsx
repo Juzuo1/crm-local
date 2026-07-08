@@ -166,36 +166,134 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* 跟进提醒 */}
+      {/* 跟进提醒 - 增强版 */}
       <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
         <h3 className="font-semibold text-gray-900 mb-4">
           跟进提醒
-          {data.followupAlerts.length > 0 && (
-            <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">{data.followupAlerts.length}</span>
-          )}
-        </h3>
-        <div className="space-y-2">
-          {data.followupAlerts.map(c => {
-            const isOverdue = new Date(c.next_followup_at) < new Date();
+          {(() => {
+            const overdue = data.followupAlerts.filter(c => new Date(c.next_followup_at) < new Date());
+            const today = data.followupAlerts.filter(c => {
+              const d = new Date(c.next_followup_at);
+              const now = new Date();
+              return d.toDateString() === now.toDateString();
+            });
+            const tomorrow = data.followupAlerts.filter(c => {
+              const d = new Date(c.next_followup_at);
+              const tomorrow = new Date();
+              tomorrow.setDate(tomorrow.getDate() + 1);
+              return d.toDateString() === tomorrow.toDateString();
+            });
             return (
-              <Link key={c.id} href={`/customers/${c.id}`}
-                className={`flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition ${
-                  isOverdue ? 'bg-red-50 border border-red-100' : ''
-                }`}>
-                <div>
-                  <span className="text-sm font-medium text-gray-900">{c.contact_name}</span>
-                  {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
-                </div>
-                <span className={`text-xs ${isOverdue ? 'text-red-600 font-medium' : 'text-orange-600'}`}>
-                  {isOverdue ? '已逾期: ' : ''}{formatDateTime(c.next_followup_at)}
-                </span>
-              </Link>
+              <span className="ml-2 space-x-1">
+                {overdue.length > 0 && <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">{overdue.length}逾期</span>}
+                {today.length > 0 && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">{today.length}今天</span>}
+                {tomorrow.length > 0 && <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{tomorrow.length}明天</span>}
+              </span>
             );
-          })}
-          {data.followupAlerts.length === 0 && (
-            <p className="text-sm text-gray-400 py-4 text-center">✅ 没有需要跟进的客户</p>
-          )}
-        </div>
+          })()}
+        </h3>
+
+        {data.followupAlerts.length === 0 ? (
+          <p className="text-sm text-gray-400 py-4 text-center">✅ 没有需要跟进的客户</p>
+        ) : (
+          <div className="space-y-4">
+            {/* 按分组显示 */}
+            {(() => {
+              const now = new Date();
+              const today = new Date();
+              const tomorrow = new Date();
+              tomorrow.setDate(tomorrow.getDate() + 1);
+
+              const overdue = data.followupAlerts.filter(c => new Date(c.next_followup_at) < today);
+              const todayItems = data.followupAlerts.filter(c => {
+                const d = new Date(c.next_followup_at);
+                return d.toDateString() === today.toDateString();
+              });
+              const tomorrowItems = data.followupAlerts.filter(c => {
+                const d = new Date(c.next_followup_at);
+                return d.toDateString() === tomorrow.toDateString();
+              });
+
+              return (
+                <>
+                  {overdue.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-semibold text-red-600 uppercase">⚠ 已逾期</span>
+                        <span className="w-8 h-px bg-red-200 flex-1" />
+                      </div>
+                      <div className="space-y-2">
+                        {overdue.slice(0, 8).map(c => (
+                          <div key={c.id}
+                            className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100/50 transition">
+                            <Link href={`/customers/${c.id}`} className="flex-1 min-w-0">
+                              <div>
+                                <span className="text-sm font-medium text-gray-900">{c.contact_name}</span>
+                                {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                              </div>
+                              <span className="text-xs text-red-600 font-medium">
+                                已逾期 · {formatDateTime(c.next_followup_at)}
+                              </span>
+                            </Link>
+                            <Link href={`/customers/${c.id}`}
+                              className="shrink-0 ml-3 px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition cursor-pointer">
+                              跟进
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {todayItems.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-semibold text-orange-600 uppercase">⏰ 今天需跟进</span>
+                        <span className="flex-1 h-px bg-orange-200" />
+                      </div>
+                      <div className="space-y-2">
+                        {todayItems.map(c => (
+                          <div key={c.id}
+                            className="flex items-center justify-between py-2 px-3 rounded-lg bg-orange-50 border border-orange-100 hover:bg-orange-100/50 transition">
+                            <Link href={`/customers/${c.id}`} className="flex-1 min-w-0">
+                              <span className="text-sm font-medium text-gray-900">{c.contact_name}</span>
+                              {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                            </Link>
+                            <Link href={`/customers/${c.id}`}
+                              className="shrink-0 ml-3 px-3 py-1.5 text-xs rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition cursor-pointer">
+                              跟进
+                            </Link>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {tomorrowItems.length > 0 && (
+                    <div>
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="text-xs font-semibold text-gray-400 uppercase">📅 明天</span>
+                        <span className="flex-1 h-px bg-gray-200" />
+                      </div>
+                      <div className="space-y-1.5">
+                        {tomorrowItems.map(c => (
+                          <Link key={c.id} href={`/customers/${c.id}`}
+                            className="flex items-center justify-between py-1.5 px-3 rounded-lg hover:bg-gray-50 transition text-sm">
+                            <div>
+                              <span className="text-gray-700">{c.contact_name}</span>
+                              {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                            </div>
+                            <span className="text-xs text-gray-400">{formatDateTime(c.next_followup_at)}</span>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
+          </div>
+        )}
       </div>
     </div>
   );

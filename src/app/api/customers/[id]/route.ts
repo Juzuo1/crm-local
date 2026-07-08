@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { findCustomerById, updateCustomer, softDeleteCustomer, listFollowups, listUsers, findUserById, getTeamMemberIds, hasPermission } from '@/lib/db';
+import { findCustomerById, updateCustomer, softDeleteCustomer, listFollowups, listUsers, findUserById, getTeamMemberIds, hasPermission, getCustomerSnapshot, addAuditLog } from '@/lib/db';
 import { getSession, SessionUser } from '@/lib/auth';
+import { buildChangeDetail } from '@/lib/audit';
 import type { Customer } from '@/lib/db';
 
 // 检查用户能否看到该客户（基于数据范围）
@@ -62,6 +63,9 @@ export async function GET(
     canEditTags: hasPermission(user.role, 'customers.edit_tags'),
     canDelete: hasPermission(user.role, 'customers.delete'),
     canAssign: hasPermission(user.role, 'customers.assign'),
+    canPushToSea: hasPermission(user.role, 'sea_pool.push'),
+    assigned_to: customer.assigned_to,
+    sea_pool_entered_at: customer.sea_pool_entered_at || null,
   });
 }
 
@@ -119,7 +123,25 @@ export async function PUT(
     return NextResponse.json({ error: '没有要更新的字段' }, { status: 400 });
   }
 
+  // 保存旧值用于审计
+  const oldSnapshot = getCustomerSnapshot(parseInt(id)) || {};
+
   updateCustomer(parseInt(id), updates as Parameters<typeof updateCustomer>[1]);
+
+  // 审计日志
+  const trackedFields = ['contact_name', 'position', 'phone', 'email', 'company_name', 'country', 'source_channel', 'customer_level', 'stage', 'product_interests', 'tags', 'notes', 'assigned_to', 'next_followup_at'];
+  const detail = buildChangeDetail(oldSnapshot, { ...oldSnapshot, ...updates }, trackedFields);
+  if (Object.keys(detail).length > 0) {
+    addAuditLog({
+      user_id: user.id,
+      user_name: user.name,
+      action: 'customer.update',
+      target_type: 'customer',
+      target_id: parseInt(id),
+      target_name: customer.contact_name,
+      detail: detail as Record<string, unknown>,
+    });
+  }
 
   return NextResponse.json({ success: true });
 }
@@ -148,6 +170,16 @@ export async function DELETE(
   }
 
   softDeleteCustomer(parseInt(id));
+
+  addAuditLog({
+    user_id: user.id,
+    user_name: user.name,
+    action: 'customer.delete',
+    target_type: 'customer',
+    target_id: parseInt(id),
+    target_name: customer.contact_name,
+    detail: { contact_name: customer.contact_name, company_name: customer.company_name || '' },
+  });
 
   return NextResponse.json({ success: true });
 }

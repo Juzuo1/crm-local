@@ -293,7 +293,7 @@ export default function CustomersPage() {
               <tr>
                 <th className="w-10 px-2 py-3">
                   <input type="checkbox" onChange={toggleSelectAll}
-                    checked={data && data.data.length > 0 && selectedIds.size === data.data.length}
+                    checked={(data && data.data.length > 0 && selectedIds.size === data.data.length) || false}
                     className="rounded border-gray-300 cursor-pointer" />
                 </th>
                 <th className="text-left px-3 py-3 font-medium text-gray-600">联系人</th>
@@ -318,7 +318,7 @@ export default function CustomersPage() {
                   const isOverdue = c.next_followup_at && new Date(c.next_followup_at) < new Date();
 
                   return (
-                    <tr key={c.id} className={`hover:bg-gray-50 transition ${isSelected ? 'bg-blue-50' : ''}`}>
+                    <tr key={c.id} className={`hover:bg-gray-50 transition ${isSelected ? 'bg-blue-50' : ''} ${isOverdue ? 'border-l-2 border-l-red-400 bg-red-50/30' : ''}`}>
                       <td className="px-2 py-3" onClick={e => e.stopPropagation()}>
                         <input type="checkbox" checked={isSelected}
                           onChange={() => toggleSelect(c.id)}

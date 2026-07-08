@@ -21,7 +21,7 @@ interface Customer {
   next_followup_at: string;
   last_followup_at: string;
   created_at: string;
-  assigned_to: number;
+  assigned_to: number | null;
   created_by: number;
   followups: Followup[];
   canEdit?: boolean;
@@ -30,6 +30,8 @@ interface Customer {
   canEditTags?: boolean;
   canDelete?: boolean;
   canAssign?: boolean;
+  canPushToSea?: boolean;
+  sea_pool_entered_at: string | null;
 }
 
 interface Followup {
@@ -88,6 +90,7 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
 
   // 删除确认
   const [showDelete, setShowDelete] = useState(false);
+  const [pushingToSea, setPushingToSea] = useState(false);
 
   // 跟进记录展开/收起
   const [showAllFollowups, setShowAllFollowups] = useState(false);
@@ -136,6 +139,22 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
     }
   }
 
+  async function pushToSea() {
+    setPushingToSea(true);
+    const res = await fetch('/api/sea-pool', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_ids: [parseInt(id)] }),
+    });
+    const json = await res.json();
+    setPushingToSea(false);
+    if (json.success) {
+      router.push('/sea-pool');
+    } else {
+      alert(json.error || '操作失败');
+    }
+  }
+
   async function deleteCustomer() {
     await fetch(`/api/customers/${id}`, { method: 'DELETE' });
     router.push('/customers');
@@ -165,6 +184,12 @@ export default function CustomerDetailPage({ params }: { params: Promise<{ id: s
             <button onClick={() => { setEditData({ ...customer }); setEditing(true); }}
               className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 cursor-pointer">
               编辑
+            </button>
+          )}
+          {customer.canPushToSea && customer.assigned_to && (
+            <button onClick={() => pushToSea()}
+              className="px-3 py-1.5 text-sm border border-orange-200 text-orange-600 rounded-lg hover:bg-orange-50 cursor-pointer">
+              推入公海
             </button>
           )}
           {customer.canDelete && (

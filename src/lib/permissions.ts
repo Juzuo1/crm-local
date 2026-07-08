@@ -135,6 +135,31 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     ],
   },
 
+  // -------- 公海管理 --------
+  {
+    key: 'sea_pool',
+    label: '公海管理',
+    icon: '🌊',
+    hasDataScope: false,
+    permissions: [
+      { key: 'sea_pool.view', label: '查看公海', desc: '浏览公海客户列表' },
+      { key: 'sea_pool.claim', label: '领取公海客户', desc: '从公海领取客户到自己名下' },
+      { key: 'sea_pool.push', label: '推入公海', desc: '手动将客户推入公海' },
+      { key: 'sea_pool.manage_rules', label: '管理公海规则', desc: '配置自动掉公海规则' },
+    ],
+  },
+
+  // -------- 操作日志 --------
+  {
+    key: 'audit',
+    label: '操作日志',
+    icon: '📜',
+    hasDataScope: false,
+    permissions: [
+      { key: 'audit.view', label: '查看操作日志', desc: '查看系统中的操作记录和变更历史' },
+    ],
+  },
+
   // -------- 系统设置 --------
   {
     key: 'settings',
@@ -144,6 +169,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     permissions: [
       { key: 'settings.view', label: '查看系统设置', desc: '访问系统设置页面' },
       { key: 'settings.export', label: '导出客户数据', desc: '在设置页导出全部客户 CSV' },
+      { key: 'settings.notifications', label: '通知偏好设置', desc: '配置浏览器通知和跟进提醒偏好' },
     ],
   },
 ];
@@ -208,10 +234,16 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       'followups.filter_user',
       // 客群管理
       'segments.view', 'segments.create',
+      // 公海管理
+      'sea_pool.view', 'sea_pool.claim', 'sea_pool.push',
       // 部门管理（仅自己部门）
       'departments.view', 'departments.add_member', 'departments.remove_member',
       // 用户管理（仅自己部门）
       'users.view', 'users.reset_pwd', 'users.transfer',
+      // 公海管理
+      'sea_pool.view', 'sea_pool.claim', 'sea_pool.push', 'sea_pool.manage_rules',
+      // 操作日志
+      'audit.view',
       // 系统设置
       'settings.view',
     ],
@@ -237,6 +269,8 @@ export const DEFAULT_ROLE_PERMISSIONS: RolePermissions = {
       'followups.view', 'followups.create',
       // 客群管理
       'segments.view',
+      // 公海管理
+      'sea_pool.view', 'sea_pool.claim',
     ],
     dataScopes: {
       dashboard: 'own',

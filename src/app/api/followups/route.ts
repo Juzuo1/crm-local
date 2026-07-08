@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createFollowup, listAllFollowups, listUsers, resolveAccess, hasPermission } from '@/lib/db';
+import { createFollowup, listAllFollowups, listUsers, resolveAccess, hasPermission, findCustomerById, addAuditLog } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 
 export async function GET(request: NextRequest) {
@@ -64,6 +64,18 @@ export async function POST(request: NextRequest) {
     method: method || 'phone',
     content: content || '',
     next_followup_at: next_followup_at || null,
+  });
+
+  // 审计日志
+  const customer = findCustomerById(customer_id);
+  addAuditLog({
+    user_id: user.id,
+    user_name: user.name,
+    action: 'followup.create',
+    target_type: 'followup',
+    target_id: customer_id,
+    target_name: customer?.contact_name || `客户#${customer_id}`,
+    detail: { method: method || 'phone', content_preview: (content || '').slice(0, 80) },
   });
 
   return NextResponse.json({ success: true });
