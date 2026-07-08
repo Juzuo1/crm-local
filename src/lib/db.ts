@@ -423,6 +423,12 @@ export interface CustomerFilters {
   channel?: string;
   level?: string;
   tag?: string;
+  stage?: string;
+  assignedTo?: number;
+  createdAtFrom?: string;
+  createdAtTo?: string;
+  nextFollowupFrom?: string;
+  nextFollowupTo?: string;
   /** 可见用户ID列表：空数组=管理员看全部，有值=只看这些人的客户 */
   visibleUserIds?: number[];
   page?: number;
@@ -462,6 +468,30 @@ export function listCustomers(filters: CustomerFilters): { data: Customer[]; tot
   }
   if (filters.tag) {
     filtered = filtered.filter(c => c.tags.includes(filters.tag!));
+  }
+  if (filters.stage) {
+    filtered = filtered.filter(c => c.stage === filters.stage);
+  }
+  if (filters.assignedTo !== undefined) {
+    // assignedTo=0 表示筛选「未分配」
+    if (filters.assignedTo === 0) {
+      filtered = filtered.filter(c => c.assigned_to === null || c.assigned_to === 0);
+    } else {
+      filtered = filtered.filter(c => c.assigned_to === filters.assignedTo);
+    }
+  }
+  if (filters.createdAtFrom) {
+    filtered = filtered.filter(c => c.created_at >= filters.createdAtFrom!);
+  }
+  if (filters.createdAtTo) {
+    // createdAtTo 是当天结束时刻
+    filtered = filtered.filter(c => c.created_at <= filters.createdAtTo! + 'T23:59:59');
+  }
+  if (filters.nextFollowupFrom) {
+    filtered = filtered.filter(c => c.next_followup_at && c.next_followup_at >= filters.nextFollowupFrom!);
+  }
+  if (filters.nextFollowupTo) {
+    filtered = filtered.filter(c => c.next_followup_at && c.next_followup_at <= filters.nextFollowupTo! + 'T23:59:59');
   }
 
   // 按创建时间倒序

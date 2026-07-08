@@ -89,6 +89,14 @@ export default function CustomersPage() {
   const [country, setCountry] = useState(searchParams.get('country') || '');
   const [channel, setChannel] = useState(searchParams.get('channel') || '');
   const [level, setLevel] = useState(searchParams.get('level') || '');
+  const [stage, setStage] = useState(searchParams.get('stage') || '');
+  const [tag, setTag] = useState(searchParams.get('tag') || '');
+  const [assignedTo, setAssignedTo] = useState(searchParams.get('assignedTo') || '');
+  const [createdAtFrom, setCreatedAtFrom] = useState(searchParams.get('createdAtFrom') || '');
+  const [createdAtTo, setCreatedAtTo] = useState(searchParams.get('createdAtTo') || '');
+  const [nextFollowupFrom, setNextFollowupFrom] = useState(searchParams.get('nextFollowupFrom') || '');
+  const [nextFollowupTo, setNextFollowupTo] = useState(searchParams.get('nextFollowupTo') || '');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [page, setPage] = useState(parseInt(searchParams.get('page') || '1'));
   const [segmentName, setSegmentName] = useState('');
   const [users, setUsers] = useState<UserItem[]>([]);
@@ -105,6 +113,13 @@ export default function CustomersPage() {
     if (country) params.set('country', country);
     if (channel) params.set('channel', channel);
     if (level) params.set('level', level);
+    if (stage) params.set('stage', stage);
+    if (tag) params.set('tag', tag);
+    if (assignedTo) params.set('assignedTo', assignedTo);
+    if (createdAtFrom) params.set('createdAtFrom', createdAtFrom);
+    if (createdAtTo) params.set('createdAtTo', createdAtTo);
+    if (nextFollowupFrom) params.set('nextFollowupFrom', nextFollowupFrom);
+    if (nextFollowupTo) params.set('nextFollowupTo', nextFollowupTo);
     if (segmentId) params.set('segment', segmentId);
     params.set('page', String(page));
     params.set('pageSize', '20');
@@ -115,7 +130,7 @@ export default function CustomersPage() {
     if (json.segmentName) setSegmentName(json.segmentName);
     if (json.users) setUsers(json.users);
     setLoading(false);
-  }, [search, country, channel, level, page, segmentId]);
+  }, [search, country, channel, level, stage, tag, assignedTo, createdAtFrom, createdAtTo, nextFollowupFrom, nextFollowupTo, page, segmentId]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -125,6 +140,13 @@ export default function CustomersPage() {
     setCountry('');
     setChannel('');
     setLevel('');
+    setStage('');
+    setTag('');
+    setAssignedTo('');
+    setCreatedAtFrom('');
+    setCreatedAtTo('');
+    setNextFollowupFrom('');
+    setNextFollowupTo('');
     setPage(1);
   };
 
@@ -132,7 +154,10 @@ export default function CustomersPage() {
     router.push('/customers');
   };
 
-  const hasFilters = search || country || channel || level || !!segmentId;
+  const hasFilters = search || country || channel || level || stage || tag || assignedTo || createdAtFrom || createdAtTo || nextFollowupFrom || nextFollowupTo || !!segmentId;
+
+  // 计算高级筛选项数量（用于角标）
+  const advancedFilterCount = [stage, tag, assignedTo, createdAtFrom, createdAtTo, nextFollowupFrom, nextFollowupTo].filter(Boolean).length;
 
   // 快速切换阶段
   async function changeStage(customerId: number, newStage: string) {
@@ -221,38 +246,113 @@ export default function CustomersPage() {
       )}
 
       {/* 搜索栏 */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
-        <div className="flex flex-wrap gap-3">
-          <input
-            type="text"
-            placeholder="搜索联系人、公司、邮箱、手机..."
-            value={search}
-            onChange={e => { setSearch(e.target.value); setPage(1); }}
-            onKeyDown={e => { if (e.key === 'Enter') fetchData(); }}
-            className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
-          />
-          <select value={country} onChange={e => { setCountry(e.target.value); setPage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">全部国家</option>
-            {countries.map(c => <option key={c} value={c}>{c}</option>)}
-          </select>
-          <select value={channel} onChange={e => { setChannel(e.target.value); setPage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">全部渠道</option>
-            {channels.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-          </select>
-          <select value={level} onChange={e => { setLevel(e.target.value); setPage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none">
-            <option value="">全部等级</option>
-            {levels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
-          </select>
-          {hasFilters && (
-            <button onClick={clearFilters}
-              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 cursor-pointer">
-              清除筛选
+      <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+        {/* 基础筛选行 */}
+        <div className="p-4">
+          <div className="flex flex-wrap gap-3 items-center">
+            <input
+              type="text"
+              placeholder="搜索联系人、公司、邮箱、手机..."
+              value={search}
+              onChange={e => { setSearch(e.target.value); setPage(1); }}
+              onKeyDown={e => { if (e.key === 'Enter') fetchData(); }}
+              className="flex-1 min-w-[200px] px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            />
+            <select value={country} onChange={e => { setCountry(e.target.value); setPage(1); }}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none max-w-[140px]">
+              <option value="">全部国家</option>
+              {countries.map(c => <option key={c} value={c}>{c}</option>)}
+            </select>
+            <select value={channel} onChange={e => { setChannel(e.target.value); setPage(1); }}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none max-w-[130px]">
+              <option value="">全部渠道</option>
+              {channels.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+            </select>
+            <select value={level} onChange={e => { setLevel(e.target.value); setPage(1); }}
+              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none max-w-[120px]">
+              <option value="">全部等级</option>
+              {levels.map(l => <option key={l.value} value={l.value}>{l.label}</option>)}
+            </select>
+            <button
+              onClick={() => setShowAdvanced(!showAdvanced)}
+              className={`flex items-center gap-1 px-3 py-2 text-sm border rounded-lg transition cursor-pointer whitespace-nowrap ${showAdvanced ? 'bg-blue-50 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:bg-gray-50'}`}>
+              <span>更多筛选</span>
+              {advancedFilterCount > 0 && (
+                <span className="bg-blue-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{advancedFilterCount}</span>
+              )}
+              <span className="text-xs">{showAdvanced ? '▲' : '▼'}</span>
             </button>
-          )}
+            {hasFilters && (
+              <button onClick={clearFilters}
+                className="px-3 py-2 text-sm text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition cursor-pointer whitespace-nowrap">
+                清除全部筛选
+              </button>
+            )}
+          </div>
         </div>
+
+        {/* 高级筛选面板 */}
+        {showAdvanced && (
+          <div className="border-t border-gray-100 px-4 py-4 bg-gray-50/50 rounded-b-xl space-y-3">
+            {/* 第一行：阶段 + 标签 + 负责人 */}
+            <div className="flex flex-wrap gap-3">
+              <select value={stage} onChange={e => { setStage(e.target.value); setPage(1); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none min-w-[130px]">
+                <option value="">全部阶段</option>
+                {stages.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
+              <input
+                type="text"
+                placeholder="标签筛选（如：VIP、锂电池）"
+                value={tag}
+                onChange={e => { setTag(e.target.value); setPage(1); }}
+                onKeyDown={e => { if (e.key === 'Enter') fetchData(); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-w-[180px]"
+              />
+              <select value={assignedTo} onChange={e => { setAssignedTo(e.target.value); setPage(1); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500 outline-none min-w-[120px]">
+                <option value="">全部负责人</option>
+                <option value="0">未分配（公海）</option>
+                {users.map(u => <option key={u.id} value={u.id}>{u.name}</option>)}
+              </select>
+            </div>
+
+            {/* 第二行：建档时间范围 + 下次跟进时间范围 */}
+            <div className="flex flex-wrap gap-3 items-center">
+              <span className="text-xs text-gray-500 font-medium min-w-[60px]">建档时间</span>
+              <input
+                type="date"
+                value={createdAtFrom}
+                onChange={e => { setCreatedAtFrom(e.target.value); setPage(1); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+              <span className="text-xs text-gray-400">至</span>
+              <input
+                type="date"
+                value={createdAtTo}
+                onChange={e => { setCreatedAtTo(e.target.value); setPage(1); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+
+              <span className="text-xs text-gray-300 mx-2">|</span>
+
+              <span className="text-xs text-gray-500 font-medium min-w-[60px]">下次跟进</span>
+              <input
+                type="date"
+                value={nextFollowupFrom}
+                onChange={e => { setNextFollowupFrom(e.target.value); setPage(1); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+              <span className="text-xs text-gray-400">至</span>
+              <input
+                type="date"
+                value={nextFollowupTo}
+                onChange={e => { setNextFollowupTo(e.target.value); setPage(1); }}
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       {/* 消息提示 */}
