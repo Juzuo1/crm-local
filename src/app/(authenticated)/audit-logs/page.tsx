@@ -34,17 +34,17 @@ const TARGET_TYPE_LABELS: Record<string, string> = {
 
 const ACTION_COLORS: Record<string, string> = {
   'customer.create': 'bg-green-100 text-green-800',
-  'customer.update': 'bg-blue-100 text-blue-800',
+  'customer.update': 'bg-orange-100 text-orange-800',
   'customer.delete': 'bg-red-100 text-red-800',
   'customer.assign': 'bg-purple-100 text-purple-800',
   'followup.create': 'bg-teal-100 text-teal-800',
   'user.create': 'bg-green-100 text-green-800',
-  'user.update': 'bg-blue-100 text-blue-800',
+  'user.update': 'bg-orange-100 text-orange-800',
   'user.reset_pwd': 'bg-yellow-100 text-yellow-800',
   'user.toggle': 'bg-orange-100 text-orange-800',
   'user.transfer': 'bg-purple-100 text-purple-800',
   'department.create': 'bg-green-100 text-green-800',
-  'department.update': 'bg-blue-100 text-blue-800',
+  'department.update': 'bg-orange-100 text-orange-800',
   'department.delete': 'bg-red-100 text-red-800',
   'department.add_member': 'bg-teal-100 text-teal-800',
   'department.remove_member': 'bg-orange-100 text-orange-800',
@@ -174,7 +174,7 @@ export default function AuditLogsPage() {
                 onClick={() => changeFilterDays(opt.days)}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${
                   filterDays === opt.days
-                    ? 'bg-blue-600 text-white'
+                    ? 'bg-[#0A2540] text-white'
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}>
                 {opt.label}
@@ -235,7 +235,7 @@ export default function AuditLogsPage() {
                     <>
                       <tr key={item.id}
                         onClick={() => setExpandedRow(isExpanded ? null : item.id)}
-                        className={`hover:bg-gray-50 cursor-pointer transition ${isExpanded ? 'bg-blue-50/50' : ''}`}>
+                        className={`hover:bg-gray-50 cursor-pointer transition ${isExpanded ? 'bg-orange-50/50' : ''}`}>
                         <td className="px-4 py-3 text-xs text-gray-500 whitespace-nowrap">
                           {formatDateTime(item.created_at)}
                         </td>

@@ -17,7 +17,7 @@ const scopeLabels: Record<DataScope, string> = {
 
 const scopeColors: Record<DataScope, string> = {
   own: 'bg-yellow-100 text-yellow-800 border-yellow-300',
-  department: 'bg-blue-100 text-blue-800 border-blue-300',
+  department: 'bg-orange-100 text-orange-800 border-orange-300',
   all: 'bg-green-100 text-green-800 border-green-300',
 };
 
@@ -109,7 +109,7 @@ export default function RolesPage() {
           <p className="text-sm text-gray-500 mt-1">配置每个角色的操作权限和数据范围</p>
         </div>
         <button onClick={save}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 cursor-pointer">
+          className="px-4 py-2 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] cursor-pointer">
           保存权限
         </button>
       </div>
@@ -124,7 +124,7 @@ export default function RolesPage() {
           <button key={key} onClick={() => setActiveRole(key)}
             className={`px-4 py-2 text-sm rounded-lg font-medium transition cursor-pointer ${
               activeRole === key
-                ? 'bg-blue-600 text-white shadow-sm'
+                ? 'bg-[#0A2540] text-white shadow-sm'
                 : 'bg-white text-gray-600 border border-gray-200 hover:border-gray-300'
             }`}>
             {label}
@@ -137,7 +137,7 @@ export default function RolesPage() {
 
       {/* 当前角色说明 */}
       {isAdminRole && (
-        <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 text-sm text-blue-700">
+        <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-[#0A2540]">
           💡 管理员拥有全部权限，不可修改。如需限制管理员权限，请先创建新角色。
         </div>
       )}
@@ -208,7 +208,7 @@ export default function RolesPage() {
                             checked={checked}
                             disabled={isAdminRole}
                             onChange={() => togglePerm(perm.key)}
-                            className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500 disabled:cursor-not-allowed"
+                            className="w-4 h-4 rounded border-gray-300 text-[#FF6B35] focus:ring-[#FF6B35]/40 disabled:cursor-not-allowed"
                           />
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-medium text-gray-800">{perm.label}</div>
@@ -235,7 +235,7 @@ export default function RolesPage() {
           <p className="text-xs text-gray-400">权限变更将在用户下次登录时生效</p>
         </div>
         <button onClick={save}
-          className="px-6 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 cursor-pointer shadow-sm">
+          className="px-6 py-2.5 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] cursor-pointer shadow-sm">
           保存权限设置
         </button>
       </div>

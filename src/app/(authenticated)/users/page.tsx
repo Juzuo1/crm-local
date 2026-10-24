@@ -128,7 +128,7 @@ export default function UsersPage() {
     flash(`已交接 ${json.count || 0} 个客户`);
   }
 
-  const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#FF6B35]/40 outline-none";
 
   return (
     <div className="max-w-4xl mx-auto space-y-4">
@@ -141,7 +141,7 @@ export default function UsersPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">用户管理</h2>
         <button onClick={() => setShowForm(!showForm)}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition cursor-pointer">
+          className="px-4 py-2 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] transition cursor-pointer">
           {showForm ? '取消' : '+ 新增子账号'}
         </button>
       </div>
@@ -176,7 +176,7 @@ export default function UsersPage() {
               </div>
             </div>
             <button type="submit"
-              className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 cursor-pointer">
+              className="px-6 py-2 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] cursor-pointer">
               创建账号
             </button>
           </form>
@@ -209,7 +209,7 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     <span className={`text-xs px-2 py-0.5 rounded-full ${
                       u.role === 'admin' ? 'bg-purple-100 text-purple-800' :
-                      u.role === 'manager' ? 'bg-blue-100 text-blue-800' :
+                      u.role === 'manager' ? 'bg-orange-100 text-orange-800' :
                       'bg-gray-100 text-gray-700'
                     }`}>
                       {roleLabels[u.role] || u.role}
@@ -232,7 +232,7 @@ export default function UsersPage() {
                         setEditEmail(u.email);
                         setEditRole(u.role);
                       }}
-                        className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded cursor-pointer">
+                        className="text-xs px-2 py-1 text-[#FF6B35] hover:bg-orange-50 rounded cursor-pointer">
                         编辑
                       </button>
                       {/* 改密 */}
@@ -287,7 +287,7 @@ export default function UsersPage() {
               <button onClick={() => setEditUser(null)}
                 className="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 cursor-pointer">取消</button>
               <button onClick={saveEdit}
-                className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 cursor-pointer">保存</button>
+                className="px-4 py-2 bg-[#0A2540] text-white text-sm rounded-lg hover:bg-[#123455] cursor-pointer">保存</button>
             </div>
           </div>
         </Modal>

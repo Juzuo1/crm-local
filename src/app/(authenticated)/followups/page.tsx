@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import Icon from '@/components/Icon';
+import { CHANNEL_LABELS, METHOD_LABELS } from '@/lib/ui';
 
 interface FollowupItem {
   id: number;
@@ -27,22 +29,17 @@ interface ListData {
   users: { id: number; name: string; role: string }[];
 }
 
-const methodLabels: Record<string, string> = {
-  phone: '📞 电话', whatsapp: '💬 WhatsApp', email: '📧 邮件',
-  wechat: '🟢 微信', meeting: '🤝 见面'
+const METHOD_ICON: Record<string, string> = {
+  phone: 'phone', whatsapp: 'chat', email: 'mail', wechat: 'chat', meeting: 'users',
 };
 
-const channelLabels: Record<string, string> = {
-  facebook: 'Facebook', tiktok: 'TikTok', alibaba: '阿里国际站',
-  website: '独立站', exhibition: '展会', referral: '转介绍', other: '其他'
-};
+const selectCls = 'px-3 py-2 border border-slate-300 rounded-lg text-sm bg-white cursor-pointer focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] outline-none transition';
 
 export default function FollowupsPage() {
   const router = useRouter();
   const [data, setData] = useState<ListData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // 筛选条件
   const [search, setSearch] = useState('');
   const [channel, setChannel] = useState('');
   const [method, setMethod] = useState('');
@@ -77,44 +74,41 @@ export default function FollowupsPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-4">
       <div className="flex items-center justify-between">
-        <h2 className="text-xl font-bold text-gray-900">跟进记录</h2>
-        {data && <span className="text-sm text-gray-400">共 {data.total} 条</span>}
+        <div>
+          <h2 className="text-xl font-bold text-[#0A2540]">跟进记录</h2>
+          {data && <p className="text-xs text-slate-400 mt-0.5">共 {data.total} 条</p>}
+        </div>
       </div>
 
       {/* 筛选栏 */}
-      <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100 space-y-3">
-        {/* 搜索框 */}
-        <input
-          type="text"
-          placeholder="搜索客户姓名、公司、邮箱、电话..."
-          value={search}
-          onChange={e => { setSearch(e.target.value); setPage(1); }}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none"
-        />
+      <div className="bg-white rounded-xl p-4 shadow-sm border border-slate-200/80 space-y-3">
+        <div className="relative">
+          <Icon name="search" className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+          <input
+            type="text"
+            placeholder="搜索客户姓名、公司、邮箱、电话…"
+            value={search}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
+            className="w-full pl-9 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-[#FF6B35]/40 focus:border-[#FF6B35] outline-none transition"
+          />
+        </div>
 
-        {/* 下拉筛选 */}
         <div className="flex flex-wrap gap-2">
-          {/* 渠道 */}
-          <select value={channel} onChange={e => { setChannel(e.target.value); setPage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none">
+          <select value={channel} onChange={e => { setChannel(e.target.value); setPage(1); }} className={selectCls}>
             <option value="">全部渠道</option>
-            {Object.entries(channelLabels).map(([k, v]) => (
+            {Object.entries(CHANNEL_LABELS).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
 
-          {/* 跟进方式 */}
-          <select value={method} onChange={e => { setMethod(e.target.value); setPage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none">
+          <select value={method} onChange={e => { setMethod(e.target.value); setPage(1); }} className={selectCls}>
             <option value="">全部方式</option>
-            {Object.entries(methodLabels).map(([k, v]) => (
+            {Object.entries(METHOD_LABELS).map(([k, v]) => (
               <option key={k} value={k}>{v}</option>
             ))}
           </select>
 
-          {/* 时间范围 */}
-          <select value={days} onChange={e => { setDays(e.target.value); setPage(1); }}
-            className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none">
+          <select value={days} onChange={e => { setDays(e.target.value); setPage(1); }} className={selectCls}>
             <option value="">全部时间</option>
             <option value="1">今天</option>
             <option value="3">近3天</option>
@@ -124,10 +118,8 @@ export default function FollowupsPage() {
             <option value="90">近90天</option>
           </select>
 
-          {/* 跟进人（管理员可见） */}
           {data && data.users && data.users.length > 0 && (
-            <select value={filterUser} onChange={e => { setFilterUser(e.target.value); setPage(1); }}
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm bg-white cursor-pointer focus:ring-2 focus:ring-blue-500 outline-none">
+            <select value={filterUser} onChange={e => { setFilterUser(e.target.value); setPage(1); }} className={selectCls}>
               <option value="">全部人员</option>
               {data.users.map(u => (
                 <option key={u.id} value={u.id}>{u.name}</option>
@@ -135,10 +127,9 @@ export default function FollowupsPage() {
             </select>
           )}
 
-          {/* 清除 */}
           {hasFilters && (
             <button onClick={clearFilters}
-              className="px-3 py-2 text-sm text-gray-500 hover:text-gray-700 cursor-pointer whitespace-nowrap">
+              className="px-3 py-2 text-sm text-red-500 hover:text-red-600 hover:bg-red-50 rounded-lg cursor-pointer whitespace-nowrap transition">
               清除全部筛选
             </button>
           )}
@@ -146,12 +137,12 @@ export default function FollowupsPage() {
       </div>
 
       {/* 时间线 */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200/80 p-6">
         {loading ? (
-          <div className="text-center py-12 text-gray-400">加载中...</div>
+          <div className="text-center py-12 text-slate-400">加载中…</div>
         ) : !data || data.data.length === 0 ? (
-          <div className="text-center py-12 text-gray-400">
-            <p className="text-4xl mb-3">📝</p>
+          <div className="text-center py-12 text-slate-400">
+            <Icon name="chat" className="w-10 h-10 text-slate-200 mx-auto mb-2" />
             <p>{hasFilters ? '没有匹配的跟进记录' : '暂无跟进记录'}</p>
           </div>
         ) : (
@@ -159,38 +150,36 @@ export default function FollowupsPage() {
             {data.data.map((f, i) => (
               <div key={f.id} className="flex gap-4 pb-5 relative">
                 {i < data.data.length - 1 && (
-                  <div className="absolute left-[17px] top-10 bottom-0 w-0.5 bg-gray-100" />
+                  <div className="absolute left-[17px] top-10 bottom-0 w-px bg-slate-200" />
                 )}
-                <div className="shrink-0 w-9 h-9 rounded-full bg-blue-100 flex items-center justify-center text-sm z-10">
-                  {methodLabels[f.method]?.split(' ')[0] || '📝'}
+                <div className="shrink-0 w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center z-10 ring-4 ring-white">
+                  <Icon name={METHOD_ICON[f.method] || 'chat'} className="w-4 h-4 text-slate-500" />
                 </div>
-                <div className="flex-1 min-w-0">
+                <div className="flex-1 min-w-0 pt-0.5">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
-                    <span className="text-sm font-medium text-blue-700 cursor-pointer hover:underline"
+                    <span className="text-sm font-medium text-[#0A2540] cursor-pointer hover:text-[#FF6B35] transition"
                       onClick={() => router.push(`/customers/${f.customer_id}`)}>
                       {f.customer_name}
                     </span>
-                    {f.company_name && <span className="text-xs text-gray-400">{f.company_name}</span>}
+                    {f.company_name && <span className="text-xs text-slate-400">{f.company_name}</span>}
                     {f.customer_channel && (
-                      <span className="text-xs px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded">
-                        {channelLabels[f.customer_channel] || f.customer_channel}
+                      <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">
+                        {CHANNEL_LABELS[f.customer_channel] || f.customer_channel}
                       </span>
                     )}
-                    <span className="text-xs text-gray-400">|</span>
-                    <span className="text-xs text-gray-500">{methodLabels[f.method] || f.method}</span>
-                    <span className="text-xs text-gray-400">|</span>
-                    <span className="text-xs text-gray-400">{f.user_name}</span>
-                    <span className="text-xs text-gray-400 ml-auto">{f.created_at?.slice(0, 16)}</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">{METHOD_LABELS[f.method] || f.method}</span>
+                    <span className="text-xs text-slate-400">{f.user_name}</span>
+                    <span className="text-xs text-slate-400 ml-auto">{f.created_at?.slice(0, 16)}</span>
                   </div>
-                  {f.customer_phone && (
-                    <div className="text-xs text-gray-400 mb-1">
-                      📱 {f.customer_phone}{f.customer_email ? ` · ✉️ ${f.customer_email}` : ''}
+                  {(f.customer_phone || f.customer_email) && (
+                    <div className="text-xs text-slate-400 mb-1">
+                      {[f.customer_phone, f.customer_email].filter(Boolean).join(' · ')}
                     </div>
                   )}
-                  <p className="text-sm text-gray-600 whitespace-pre-wrap">{f.content}</p>
+                  <p className="text-sm text-slate-600 whitespace-pre-wrap leading-relaxed">{f.content}</p>
                   {f.next_followup_at && (
-                    <p className="text-xs text-blue-500 mt-1">
-                      📅 下次跟进: {f.next_followup_at.slice(0, 16)}
+                    <p className="text-xs text-[#FF6B35] mt-1.5 inline-flex items-center gap-1">
+                      <Icon name="calendar" className="w-3.5 h-3.5" />下次跟进：{f.next_followup_at.slice(0, 16)}
                     </p>
                   )}
                 </div>
@@ -201,14 +190,14 @@ export default function FollowupsPage() {
 
         {/* 分页 */}
         {data && data.totalPages > 1 && (
-          <div className="flex items-center justify-between pt-4 border-t border-gray-100 mt-4">
-            <span className="text-sm text-gray-500">共 {data.total} 条</span>
-            <div className="flex gap-1">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-4">
+            <span className="text-sm text-slate-400">共 {data.total} 条</span>
+            <div className="flex gap-1 items-center">
               <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page <= 1}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-30 cursor-pointer hover:bg-gray-100">上一页</button>
-              <span className="px-3 py-1 text-sm text-gray-500">{page}/{data.totalPages}</span>
+                className="px-3 py-1 text-sm border border-slate-200 rounded-lg disabled:opacity-30 cursor-pointer hover:bg-white transition">上一页</button>
+              <span className="px-3 py-1 text-sm text-slate-400">{page} / {data.totalPages}</span>
               <button onClick={() => setPage(p => Math.min(data.totalPages, p + 1))} disabled={page >= data.totalPages}
-                className="px-3 py-1 text-sm border rounded disabled:opacity-30 cursor-pointer hover:bg-gray-100">下一页</button>
+                className="px-3 py-1 text-sm border border-slate-200 rounded-lg disabled:opacity-30 cursor-pointer hover:bg-white transition">下一页</button>
             </div>
           </div>
         )}

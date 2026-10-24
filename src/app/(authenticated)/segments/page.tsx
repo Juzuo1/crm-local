@@ -32,7 +32,7 @@ const channelLabels: Record<string, string> = {
 };
 
 const levelColors: Record<string, string> = {
-  A: 'bg-green-100 text-green-800', B: 'bg-blue-100 text-blue-800',
+  A: 'bg-green-100 text-green-800', B: 'bg-orange-100 text-orange-800',
   C: 'bg-yellow-100 text-yellow-800', D: 'bg-red-100 text-red-800'
 };
 
@@ -149,7 +149,7 @@ export default function SegmentsPage() {
             <h2 className="font-semibold text-gray-900">客群管理</h2>
             {canCreate && (
               <button onClick={() => setShowCreate(!showCreate)}
-                className="text-xs text-blue-600 hover:text-blue-800 cursor-pointer">
+                className="text-xs text-[#FF6B35] hover:text-[#e55a2b] cursor-pointer">
                 {showCreate ? '取消' : '+ 新建'}
               </button>
             )}
@@ -158,7 +158,7 @@ export default function SegmentsPage() {
           <button
             onClick={() => { setSelectedId(null); setSelectedName(''); setCustomers([]); }}
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
-              !selectedId ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-600 hover:bg-gray-50'
+              !selectedId ? 'bg-orange-50 text-[#0A2540] font-medium' : 'text-gray-600 hover:bg-gray-50'
             }`}>
             📋 全部客户
           </button>
@@ -168,14 +168,14 @@ export default function SegmentsPage() {
         {showCreate && (
           <div className="px-4 py-4 border-b border-gray-100 bg-gray-50 space-y-3">
             <input value={customName} onChange={e => setCustomName(e.target.value)}
-              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full px-2 py-1.5 border border-gray-300 rounded text-sm outline-none focus:ring-1 focus:ring-[#FF6B35]/40"
               placeholder="客群名称" />
 
             <div className="flex flex-wrap gap-1">
               {Object.entries(channelLabels).map(([k, v]) => (
                 <button key={k} onClick={() => toggleItem(customChannels, setCustomChannels, k)}
                   className={`px-2 py-0.5 text-xs rounded border cursor-pointer ${
-                    customChannels.includes(k) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'
+                    customChannels.includes(k) ? 'bg-[#0A2540] text-white border-[#0A2540]' : 'bg-white text-gray-600 border-gray-300'
                   }`}>{v}</button>
               ))}
             </div>
@@ -184,7 +184,7 @@ export default function SegmentsPage() {
               {['A', 'B', 'C', 'D'].map(l => (
                 <button key={l} onClick={() => toggleItem(customLevels, setCustomLevels, l)}
                   className={`px-2 py-0.5 text-xs rounded border cursor-pointer ${
-                    customLevels.includes(l) ? 'bg-blue-600 text-white border-blue-600' : 'bg-white text-gray-600 border-gray-300'
+                    customLevels.includes(l) ? 'bg-[#0A2540] text-white border-[#0A2540]' : 'bg-white text-gray-600 border-gray-300'
                   }`}>{l}级</button>
               ))}
             </div>
@@ -198,7 +198,7 @@ export default function SegmentsPage() {
             </div>
 
             <button onClick={createSegment} disabled={!customName.trim()}
-              className="w-full py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700 disabled:bg-blue-300 cursor-pointer">
+              className="w-full py-1.5 bg-[#0A2540] text-white text-xs rounded hover:bg-[#123455] disabled:opacity-40 cursor-pointer">
               创建
             </button>
           </div>
@@ -227,12 +227,12 @@ export default function SegmentsPage() {
                     onClick={() => selectSegment(seg)}
                     className={`w-full flex items-center gap-2 pl-10 pr-4 py-1.5 text-sm transition cursor-pointer ${
                       selectedId === seg.id
-                        ? 'bg-blue-50 text-blue-700 font-medium'
+                        ? 'bg-orange-50 text-[#0A2540] font-medium'
                         : 'text-gray-600 hover:bg-gray-50'
                     }`}>
                     <span className="flex-1 truncate text-left">{seg.name}</span>
                     <span className={`shrink-0 text-xs px-1.5 py-0.5 rounded-full ${
-                      seg.customerCount > 0 ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-400'
+                      seg.customerCount > 0 ? 'bg-orange-100 text-[#0A2540]' : 'bg-gray-100 text-gray-400'
                     }`}>
                       {seg.customerCount}
                     </span>
@@ -268,7 +268,7 @@ export default function SegmentsPage() {
                 {selectedName} <span className="text-sm font-normal text-gray-400">({customers.length}人)</span>
               </h3>
               <Link href={`/customers?segment=${selectedId}`}
-                className="text-sm text-blue-600 hover:underline">
+                className="text-sm text-[#FF6B35] hover:underline">
                 在新页面打开
               </Link>
             </div>

@@ -88,7 +88,7 @@ export default function DepartmentsPage() {
     setMessage(msg); setTimeout(() => setMessage(''), 3000);
   }
 
-  const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none";
+  const inputClass = "w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#FF6B35]/40 outline-none";
 
   // ===== 部门操作 =====
   async function saveDepartment() {
@@ -202,7 +202,7 @@ export default function DepartmentsPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-gray-900">部门管理</h2>
         <button onClick={() => { setEditDept(null); setDeptName(''); setDeptManager(''); setShowDeptForm(true); }}
-          className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 cursor-pointer">
+          className="px-4 py-2 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] cursor-pointer">
           + 新建部门
         </button>
       </div>
@@ -228,7 +228,7 @@ export default function DepartmentsPage() {
           </div>
           <div className="flex gap-3">
             <button onClick={saveDepartment} disabled={!deptName.trim()}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:bg-blue-300 cursor-pointer">保存</button>
+              className="px-4 py-2 bg-[#0A2540] text-white text-sm rounded-lg hover:bg-[#123455] disabled:opacity-40 cursor-pointer">保存</button>
             <button onClick={() => setShowDeptForm(false)}
               className="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 cursor-pointer">取消</button>
           </div>
@@ -254,13 +254,13 @@ export default function DepartmentsPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{dept.name}</h3>
                     <p className="text-xs text-gray-500">
-                      {deptUsers.length} 名成员 · 主管：<span className="font-medium text-blue-600">{dept.manager_name}</span>
+                      {deptUsers.length} 名成员 · 主管：<span className="font-medium text-[#FF6B35]">{dept.manager_name}</span>
                     </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
                   <button onClick={() => { setAddMemberDeptId(addMemberDeptId === dept.id ? null : dept.id); }}
-                    className="px-3 py-1.5 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 cursor-pointer">
+                    className="px-3 py-1.5 text-sm bg-[#0A2540] text-white rounded-lg hover:bg-[#123455] cursor-pointer">
                     + 添加成员
                   </button>
                   <button onClick={() => { setEditDept(dept); setDeptName(dept.name); setDeptManager(dept.manager_id ? String(dept.manager_id) : ''); setShowDeptForm(true); }}
@@ -276,7 +276,7 @@ export default function DepartmentsPage() {
 
               {/* 部门内新增成员表单 */}
               {addMemberDeptId === dept.id && (
-                <div className="px-6 py-4 bg-blue-50/50 border-b border-blue-100">
+                <div className="px-6 py-4 bg-orange-50/50 border-b border-orange-100">
                   <h4 className="text-sm font-semibold text-gray-700 mb-3">添加成员到「{dept.name}」</h4>
 
                   {createdCredential && (
@@ -287,7 +287,7 @@ export default function DepartmentsPage() {
 
                   <div className="flex items-center gap-3 flex-wrap">
                     <input value={newMemberName} onChange={e => setNewMemberName(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none w-40"
+                      className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[#FF6B35]/40 outline-none w-40"
                       placeholder="输入姓名" autoFocus
                       onKeyDown={e => { if (e.key === 'Enter') createMemberInDept(); }} />
                     <select value={newMemberRole} onChange={e => setNewMemberRole(e.target.value)}
@@ -346,20 +346,20 @@ export default function DepartmentsPage() {
                           <td className="py-2.5">
                             <span className="font-medium text-gray-900">{u.name}</span>
                             {dept.manager_id === u.id && (
-                              <span className="ml-2 text-xs px-1.5 py-0.5 bg-blue-100 text-blue-700 rounded-full">主管</span>
+                              <span className="ml-2 text-xs px-1.5 py-0.5 bg-orange-100 text-[#0A2540] rounded-full">主管</span>
                             )}
                           </td>
                           <td className="py-2.5 text-gray-500">{u.email}</td>
                           <td className="py-2.5">
                             <span className={`text-xs px-2 py-0.5 rounded-full ${
-                              u.role === 'manager' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'
+                              u.role === 'manager' ? 'bg-orange-100 text-[#0A2540]' : 'bg-gray-100 text-gray-600'
                             }`}>{roleLabels[u.role]}</span>
                           </td>
                           <td className="py-2.5 text-gray-400 text-xs">{u.created_at?.slice(0, 10)}</td>
                           <td className="py-2.5 text-right">
                             <div className="flex items-center justify-end gap-1">
                               <button onClick={() => openEditMember(u)}
-                                className="text-xs px-2 py-1 text-blue-600 hover:bg-blue-50 rounded cursor-pointer">编辑</button>
+                                className="text-xs px-2 py-1 text-[#FF6B35] hover:bg-orange-50 rounded cursor-pointer">编辑</button>
                               <select
                                 onChange={e => { if (e.target.value) assignUserToDept(u.id, parseInt(e.target.value)); }}
                                 value=""
@@ -444,7 +444,7 @@ export default function DepartmentsPage() {
                 <button onClick={() => setEditMember(null)}
                   className="px-4 py-2 border border-gray-300 text-sm rounded-lg hover:bg-gray-50 cursor-pointer">取消</button>
                 <button onClick={saveMemberEdit}
-                  className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 cursor-pointer">保存</button>
+                  className="px-4 py-2 bg-[#0A2540] text-white text-sm rounded-lg hover:bg-[#123455] cursor-pointer">保存</button>
               </div>
             </div>
           </div>

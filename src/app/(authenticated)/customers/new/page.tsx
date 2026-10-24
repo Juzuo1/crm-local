@@ -53,7 +53,7 @@ export default function NewCustomerPage() {
         <div className="p-3 bg-red-50 border border-red-200 text-red-700 rounded-lg text-sm">{error}</div>
       )}
 
-      <div className="px-4 py-2.5 bg-blue-50 border border-blue-100 rounded-lg text-xs text-blue-700 flex items-center gap-2">
+      <div className="px-4 py-2.5 bg-orange-50 border border-orange-100 rounded-lg text-xs text-[#0A2540] flex items-center gap-2">
         <span>💡</span> 业务员创建的客户自动归属于自己，管理员创建的客户可在客户列表中分配负责人
       </div>
 
@@ -65,7 +65,7 @@ export default function NewCustomerPage() {
               取消
             </button>
             <button type="submit" disabled={saving}
-              className="px-6 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-400 transition cursor-pointer disabled:cursor-not-allowed">
+              className="px-6 py-2 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] disabled:opacity-40 transition cursor-pointer disabled:cursor-not-allowed">
               {saving ? '保存中...' : '保存客户'}
             </button>
           </div>

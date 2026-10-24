@@ -3,6 +3,8 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { formatDateTime } from '@/lib/utils';
+import Icon from '@/components/Icon';
+import { LEVEL_LABELS, LEVEL_SOLID, STAGE_LABELS, STAGE_SOLID, CHANNEL_LABELS, CHANNEL_SOLID, avatarColor } from '@/lib/ui';
 
 interface DashboardData {
   totalCustomers: number;
@@ -14,20 +16,6 @@ interface DashboardData {
   recentCustomers: { id: number; contact_name: string; company_name: string; country: string; source_channel: string; customer_level: string; created_at: string }[];
   followupAlerts: { id: number; contact_name: string; company_name: string; next_followup_at: string }[];
 }
-
-const levelLabels: Record<string, string> = { A: 'A级 - 高价值', B: 'B级 - 意向强', C: 'C级 - 待培育', D: 'D级 - 无效' };
-const levelColors: Record<string, string> = { A: 'bg-green-100 text-green-800', B: 'bg-blue-100 text-blue-800', C: 'bg-yellow-100 text-yellow-800', D: 'bg-red-100 text-red-800' };
-const channelLabels: Record<string, string> = {
-  facebook: 'Facebook', tiktok: 'TikTok', alibaba: '阿里国际站',
-  website: '独立站', exhibition: '展会', referral: '转介绍', other: '其他'
-};
-
-const stageLabels: Record<string, string> = {
-  new_lead: '新线索', initial_contact: '初步联系', needs_confirmed: '需求确认',
-  quoted: '已报价', sample_testing: '样品测试', negotiation: '商务谈判',
-  order_confirmed: '确认订单', production_shipping: '生产发货',
-  completed: '已成交客户', lost: '已流失'
-};
 
 export default function DashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
@@ -41,40 +29,44 @@ export default function DashboardPage() {
   }, []);
 
   if (loading) {
-    return <div className="flex items-center justify-center h-full text-gray-400">加载中...</div>;
+    return <div className="flex items-center justify-center h-full text-slate-400">加载中…</div>;
   }
 
   if (!data) return null;
 
+  const statCards = [
+    { label: '客户总数', value: data.totalCustomers, sub: `本月新增 ${data.newThisMonth}`, icon: 'users', color: 'text-[#0A2540]', iconBg: 'bg-slate-100 text-[#0A2540]' },
+    { label: '待跟进客户', value: data.pendingFollowup, sub: '今天或已逾期', icon: 'clock', color: data.pendingFollowup > 0 ? 'text-red-600' : 'text-[#0A2540]', iconBg: 'bg-red-50 text-red-500' },
+    { label: '本月新增', value: data.newThisMonth, sub: '持续积累客户资产', icon: 'plus', color: 'text-emerald-600', iconBg: 'bg-emerald-50 text-emerald-500' },
+  ];
+
   return (
-    <div className="space-y-6">
-      <h2 className="text-xl font-bold text-gray-900">仪表盘</h2>
+    <div className="space-y-5">
+      <div>
+        <h2 className="text-xl font-bold text-[#0A2540]">仪表盘</h2>
+        <p className="text-xs text-slate-400 mt-0.5">业务全貌一览</p>
+      </div>
 
       {/* 统计卡片 */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="text-sm text-gray-500 mb-1">客户总数</div>
-          <div className="text-3xl font-bold text-gray-900">{data.totalCustomers}</div>
-          <div className="text-xs text-gray-400 mt-1">本月新增 {data.newThisMonth}</div>
-        </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="text-sm text-gray-500 mb-1">待跟进客户</div>
-          <div className={`text-3xl font-bold ${data.pendingFollowup > 0 ? 'text-red-600' : 'text-gray-900'}`}>
-            {data.pendingFollowup}
+        {statCards.map(card => (
+          <div key={card.label} className="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80 flex items-center gap-4">
+            <div className={`w-11 h-11 rounded-xl ${card.iconBg} flex items-center justify-center shrink-0`}>
+              <Icon name={card.icon} className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="text-xs text-slate-400">{card.label}</div>
+              <div className={`text-2xl font-bold leading-tight ${card.color}`}>{card.value}</div>
+              <div className="text-[11px] text-slate-400">{card.sub}</div>
+            </div>
           </div>
-          <div className="text-xs text-gray-400 mt-1">今天或已逾期</div>
-        </div>
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <div className="text-sm text-gray-500 mb-1">本月新增</div>
-          <div className="text-3xl font-bold text-green-600">{data.newThisMonth}</div>
-          <div className="text-xs text-gray-400 mt-1">较上月</div>
-        </div>
+        ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* 客户等级分布 */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-900 mb-4">客户等级分布</h3>
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80">
+          <h3 className="font-semibold text-[#0A2540] mb-4">客户等级分布</h3>
           <div className="space-y-3">
             {(['A', 'B', 'C', 'D'] as const).map(level => {
               const item = data.levelDistribution.find(d => d.customer_level === level);
@@ -82,14 +74,12 @@ export default function DashboardPage() {
               const pct = data.totalCustomers > 0 ? Math.round((count / data.totalCustomers) * 100) : 0;
               return (
                 <div key={level} className="flex items-center gap-3">
-                  <span className={`px-2 py-0.5 rounded text-xs font-medium ${levelColors[level]}`}>
-                    {levelLabels[level]}
-                  </span>
-                  <div className="flex-1 h-4 bg-gray-100 rounded-full overflow-hidden">
-                    <div className={`h-full rounded-full ${level === 'A' ? 'bg-green-500' : level === 'B' ? 'bg-blue-500' : level === 'C' ? 'bg-yellow-500' : 'bg-red-500'}`}
-                      style={{ width: `${pct}%` }} />
+                  <span className="text-xs text-slate-500 w-24 shrink-0">{LEVEL_LABELS[level]}</span>
+                  <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                    <div className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${pct}%`, background: LEVEL_SOLID[level] }} />
                   </div>
-                  <span className="text-sm text-gray-600 w-12 text-right">{count}</span>
+                  <span className="text-sm text-[#0A2540] font-semibold w-10 text-right">{count}</span>
                 </div>
               );
             })}
@@ -97,24 +87,24 @@ export default function DashboardPage() {
         </div>
 
         {/* 客户阶段分布 */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-900 mb-4">客户阶段分布</h3>
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80">
+          <h3 className="font-semibold text-[#0A2540] mb-4">客户阶段分布</h3>
           <div className="space-y-2.5">
             {data.stageDistribution.length === 0 ? (
-              <p className="text-sm text-gray-400 text-center py-4">暂无数据</p>
+              <p className="text-sm text-slate-400 text-center py-4">暂无数据</p>
             ) : (
               data.stageDistribution.map(s => {
                 const pct = data.totalCustomers > 0 ? Math.round((s.count / data.totalCustomers) * 100) : 0;
-                const label = stageLabels[s.stage] || s.stage;
+                const label = STAGE_LABELS[s.stage] || s.stage;
                 return (
                   <div key={s.stage} className="flex items-center gap-3">
-                    <span className="text-sm text-gray-600 w-20 truncate">{label}</span>
-                    <div className="flex-1 h-5 bg-gray-100 rounded-full overflow-hidden">
-                      <div className="h-full bg-indigo-500 rounded-full transition-all"
-                        style={{ width: `${Math.max(pct, 2)}%`, minWidth: pct > 0 ? '8px' : '0' }} />
+                    <span className="text-xs text-slate-500 w-20 truncate shrink-0">{label}</span>
+                    <div className="flex-1 h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all duration-500"
+                        style={{ width: `${Math.max(pct, 2)}%`, background: STAGE_SOLID[s.stage] || '#94A3B8' }} />
                     </div>
-                    <span className="text-sm text-gray-900 font-medium w-8 text-right">{s.count}</span>
-                    <span className="text-xs text-gray-400 w-8 text-right">{pct}%</span>
+                    <span className="text-sm text-[#0A2540] font-semibold w-8 text-right">{s.count}</span>
+                    <span className="text-[11px] text-slate-400 w-8 text-right">{pct}%</span>
                   </div>
                 );
               })
@@ -123,52 +113,58 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* 渠道分布 - 饼图 */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-          <h3 className="font-semibold text-gray-900 mb-4">渠道来源分布</h3>
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80">
+          <h3 className="font-semibold text-[#0A2540] mb-4">渠道来源分布</h3>
           {data.channelDistribution.length === 0 ? (
-            <p className="text-sm text-gray-400 text-center py-8">暂无数据</p>
+            <p className="text-sm text-slate-400 text-center py-8">暂无数据</p>
           ) : (
             <PieChart data={data.channelDistribution.map(ch => ({
-              label: channelLabels[ch.source_channel] || ch.source_channel,
+              label: CHANNEL_LABELS[ch.source_channel] || ch.source_channel,
               value: ch.count,
+              color: CHANNEL_SOLID[ch.source_channel] || '#94A3B8',
             }))} />
           )}
         </div>
 
         {/* 最近添加的客户 */}
-        <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
+        <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-gray-900">最近添加的客户</h3>
-            <Link href="/customers" className="text-sm text-blue-600 hover:underline">查看全部</Link>
+            <h3 className="font-semibold text-[#0A2540]">最近添加的客户</h3>
+            <Link href="/customers" className="text-sm text-[#FF6B35] hover:text-[#e55a2b] font-medium inline-flex items-center gap-1">
+              查看全部 <Icon name="arrowRight" className="w-3.5 h-3.5" />
+            </Link>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             {data.recentCustomers.map(c => (
               <Link key={c.id} href={`/customers/${c.id}`}
-                className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-gray-50 transition">
-                <div>
-                  <span className="text-sm font-medium text-gray-900">{c.contact_name}</span>
-                  {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-slate-50 transition">
+                <div className={`w-7 h-7 rounded-full ${avatarColor(c.contact_name || '?')} flex items-center justify-center text-[11px] font-bold text-white shrink-0`}>
+                  {(c.contact_name || '?').slice(0, 1)}
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-gray-400">{c.country}</span>
+                <div className="flex-1 min-w-0">
+                  <span className="text-sm font-medium text-[#0A2540]">{c.contact_name}</span>
+                  {c.company_name && <span className="text-xs text-slate-400 ml-2 truncate">{c.company_name}</span>}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="text-xs text-slate-400">{c.country}</span>
                   {c.source_channel && (
-                    <span className="text-xs px-1.5 py-0.5 bg-gray-100 rounded">{channelLabels[c.source_channel] || c.source_channel}</span>
+                    <span className="text-xs px-2 py-0.5 bg-slate-100 text-slate-500 rounded-full">{CHANNEL_LABELS[c.source_channel] || c.source_channel}</span>
                   )}
                 </div>
               </Link>
             ))}
             {data.recentCustomers.length === 0 && (
-              <p className="text-sm text-gray-400 py-4 text-center">暂无客户</p>
+              <p className="text-sm text-slate-400 py-4 text-center">暂无客户</p>
             )}
           </div>
         </div>
       </div>
 
-      {/* 跟进提醒 - 增强版 */}
-      <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100">
-        <h3 className="font-semibold text-gray-900 mb-4">
+      {/* 跟进提醒 */}
+      <div className="bg-white rounded-xl p-5 shadow-sm border border-slate-200/80">
+        <h3 className="font-semibold text-[#0A2540] mb-4">
           跟进提醒
           {(() => {
             const overdue = data.followupAlerts.filter(c => new Date(c.next_followup_at) < new Date());
@@ -179,27 +175,28 @@ export default function DashboardPage() {
             });
             const tomorrow = data.followupAlerts.filter(c => {
               const d = new Date(c.next_followup_at);
-              const tomorrow = new Date();
-              tomorrow.setDate(tomorrow.getDate() + 1);
-              return d.toDateString() === tomorrow.toDateString();
+              const t = new Date();
+              t.setDate(t.getDate() + 1);
+              return d.toDateString() === t.toDateString();
             });
             return (
-              <span className="ml-2 space-x-1">
-                {overdue.length > 0 && <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">{overdue.length}逾期</span>}
-                {today.length > 0 && <span className="px-2 py-0.5 bg-orange-100 text-orange-700 text-xs rounded-full">{today.length}今天</span>}
-                {tomorrow.length > 0 && <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">{tomorrow.length}明天</span>}
+              <span className="ml-2 space-x-1.5">
+                {overdue.length > 0 && <span className="px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full font-medium ring-1 ring-inset ring-red-200">{overdue.length} 逾期</span>}
+                {today.length > 0 && <span className="px-2 py-0.5 bg-orange-50 text-[#FF6B35] text-xs rounded-full font-medium ring-1 ring-inset ring-orange-200">{today.length} 今天</span>}
+                {tomorrow.length > 0 && <span className="px-2 py-0.5 bg-slate-100 text-slate-500 text-xs rounded-full">{tomorrow.length} 明天</span>}
               </span>
             );
           })()}
         </h3>
 
         {data.followupAlerts.length === 0 ? (
-          <p className="text-sm text-gray-400 py-4 text-center">✅ 没有需要跟进的客户</p>
+          <div className="text-center py-8">
+            <Icon name="check" className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+            <p className="text-sm text-slate-400">没有需要跟进的客户</p>
+          </div>
         ) : (
           <div className="space-y-4">
-            {/* 按分组显示 */}
             {(() => {
-              const now = new Date();
               const today = new Date();
               const tomorrow = new Date();
               tomorrow.setDate(tomorrow.getDate() + 1);
@@ -219,25 +216,26 @@ export default function DashboardPage() {
                   {overdue.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-red-600 uppercase">⚠ 已逾期</span>
-                        <span className="w-8 h-px bg-red-200 flex-1" />
+                        <Icon name="warning" className="w-3.5 h-3.5 text-red-500" />
+                        <span className="text-xs font-semibold text-red-600 tracking-wide">已逾期</span>
+                        <span className="h-px bg-red-200 flex-1" />
                       </div>
                       <div className="space-y-2">
                         {overdue.slice(0, 8).map(c => (
                           <div key={c.id}
-                            className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-red-50 border border-red-100 hover:bg-red-100/50 transition">
+                            className="flex items-center justify-between py-2.5 px-3.5 rounded-xl bg-red-50/70 border border-red-100 hover:bg-red-50 transition">
                             <Link href={`/customers/${c.id}`} className="flex-1 min-w-0">
                               <div>
-                                <span className="text-sm font-medium text-gray-900">{c.contact_name}</span>
-                                {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                                <span className="text-sm font-medium text-[#0A2540]">{c.contact_name}</span>
+                                {c.company_name && <span className="text-xs text-slate-400 ml-2">{c.company_name}</span>}
                               </div>
                               <span className="text-xs text-red-600 font-medium">
                                 已逾期 · {formatDateTime(c.next_followup_at)}
                               </span>
                             </Link>
                             <Link href={`/customers/${c.id}`}
-                              className="shrink-0 ml-3 px-3 py-1.5 bg-red-600 text-white text-xs rounded-lg hover:bg-red-700 transition cursor-pointer">
-                              跟进
+                              className="shrink-0 ml-3 px-3.5 py-1.5 bg-red-600 text-white text-xs font-medium rounded-lg hover:bg-red-700 transition cursor-pointer">
+                              立即跟进
                             </Link>
                           </div>
                         ))}
@@ -248,19 +246,20 @@ export default function DashboardPage() {
                   {todayItems.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-orange-600 uppercase">⏰ 今天需跟进</span>
+                        <Icon name="clock" className="w-3.5 h-3.5 text-[#FF6B35]" />
+                        <span className="text-xs font-semibold text-[#FF6B35] tracking-wide">今天需跟进</span>
                         <span className="flex-1 h-px bg-orange-200" />
                       </div>
                       <div className="space-y-2">
                         {todayItems.map(c => (
                           <div key={c.id}
-                            className="flex items-center justify-between py-2 px-3 rounded-lg bg-orange-50 border border-orange-100 hover:bg-orange-100/50 transition">
+                            className="flex items-center justify-between py-2.5 px-3.5 rounded-xl bg-orange-50/70 border border-orange-100 hover:bg-orange-50 transition">
                             <Link href={`/customers/${c.id}`} className="flex-1 min-w-0">
-                              <span className="text-sm font-medium text-gray-900">{c.contact_name}</span>
-                              {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                              <span className="text-sm font-medium text-[#0A2540]">{c.contact_name}</span>
+                              {c.company_name && <span className="text-xs text-slate-400 ml-2">{c.company_name}</span>}
                             </Link>
                             <Link href={`/customers/${c.id}`}
-                              className="shrink-0 ml-3 px-3 py-1.5 text-xs rounded-lg bg-orange-500 text-white hover:bg-orange-600 transition cursor-pointer">
+                              className="shrink-0 ml-3 px-3.5 py-1.5 text-xs font-medium rounded-lg bg-[#FF6B35] text-white hover:bg-[#e55a2b] transition cursor-pointer">
                               跟进
                             </Link>
                           </div>
@@ -272,18 +271,19 @@ export default function DashboardPage() {
                   {tomorrowItems.length > 0 && (
                     <div>
                       <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-gray-400 uppercase">📅 明天</span>
-                        <span className="flex-1 h-px bg-gray-200" />
+                        <Icon name="calendar" className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="text-xs font-semibold text-slate-400 tracking-wide">明天</span>
+                        <span className="flex-1 h-px bg-slate-200" />
                       </div>
                       <div className="space-y-1.5">
                         {tomorrowItems.map(c => (
                           <Link key={c.id} href={`/customers/${c.id}`}
-                            className="flex items-center justify-between py-1.5 px-3 rounded-lg hover:bg-gray-50 transition text-sm">
+                            className="flex items-center justify-between py-1.5 px-3 rounded-lg hover:bg-slate-50 transition text-sm">
                             <div>
-                              <span className="text-gray-700">{c.contact_name}</span>
-                              {c.company_name && <span className="text-xs text-gray-400 ml-2">{c.company_name}</span>}
+                              <span className="text-slate-700">{c.contact_name}</span>
+                              {c.company_name && <span className="text-xs text-slate-400 ml-2">{c.company_name}</span>}
                             </div>
-                            <span className="text-xs text-gray-400">{formatDateTime(c.next_followup_at)}</span>
+                            <span className="text-xs text-slate-400">{formatDateTime(c.next_followup_at)}</span>
                           </Link>
                         ))}
                       </div>
@@ -299,10 +299,8 @@ export default function DashboardPage() {
   );
 }
 
-// ===== 饼图组件 =====
-const PIE_COLORS = ['#6366f1', '#f43f5e', '#10b981', '#f59e0b', '#3b82f6', '#ec4899', '#06b6d4', '#f97316'];
-
-function PieChart({ data }: { data: { label: string; value: number }[] }) {
+// ===== 环形饼图组件（数据自带颜色）=====
+function PieChart({ data }: { data: { label: string; value: number; color: string }[] }) {
   const total = data.reduce((s, d) => s + d.value, 0);
   const r = 75; const cx = 90; const cy = 90; const size = 180;
   let angle = -Math.PI / 2;
@@ -317,7 +315,7 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
   return (
     <div className="flex items-start gap-6">
       <svg width={size} height={size} className="shrink-0">
-        {data.map((d, i) => {
+        {data.map((d) => {
           const a = (d.value / total) * Math.PI * 2;
           const end = angle + a;
           const mid = angle + a / 2;
@@ -327,7 +325,7 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
           angle = end;
           return (
             <g key={d.label}>
-              <path d={path} fill={PIE_COLORS[i % PIE_COLORS.length]} stroke="#fff" strokeWidth="1.5" />
+              <path d={path} fill={d.color} stroke="#fff" strokeWidth="2" />
               <text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle"
                 fill="#fff" fontSize="12" fontWeight="600">{d.value}</text>
             </g>
@@ -335,16 +333,15 @@ function PieChart({ data }: { data: { label: string; value: number }[] }) {
         })}
       </svg>
       <div className="space-y-2 flex-1 pt-1">
-        {data.map((d, i) => (
+        {data.map((d) => (
           <div key={d.label} className="flex items-center gap-2 text-sm">
-            <span className="w-2.5 h-2.5 rounded-sm shrink-0" style={{ background: PIE_COLORS[i % PIE_COLORS.length] }} />
-            <span className="text-gray-600 flex-1">{d.label}</span>
-            <span className="text-gray-900 font-medium">{d.value}</span>
-            <span className="text-gray-400 text-xs">{Math.round(d.value / total * 100)}%</span>
+            <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: d.color }} />
+            <span className="text-slate-600 flex-1">{d.label}</span>
+            <span className="text-[#0A2540] font-semibold">{d.value}</span>
+            <span className="text-slate-400 text-xs w-9 text-right">{Math.round(d.value / total * 100)}%</span>
           </div>
         ))}
       </div>
     </div>
   );
 }
-

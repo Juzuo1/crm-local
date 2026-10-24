@@ -77,7 +77,7 @@ export default function SettingsPage() {
         <h3 className="font-semibold text-gray-900 mb-4">管理功能</h3>
         <div className="space-y-3">
           <Link href="/users"
-            className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition">
+            className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-orange-200 hover:bg-orange-50 transition">
             <div className="flex items-center gap-3">
               <span className="text-xl">👥</span>
               <div>
@@ -89,7 +89,7 @@ export default function SettingsPage() {
           </Link>
 
           <Link href="/segments"
-            className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition">
+            className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-orange-200 hover:bg-orange-50 transition">
             <div className="flex items-center gap-3">
               <span className="text-xl">📋</span>
               <div>
@@ -129,10 +129,10 @@ export default function SettingsPage() {
       </div>
 
       {/* 数据说明 */}
-      <div className="bg-blue-50 rounded-xl p-5 border border-blue-100">
-        <h4 className="text-sm font-semibold text-blue-800 mb-2">💡 数据说明</h4>
-        <ul className="text-xs text-blue-700 space-y-1">
-          <li>· 所有数据存储在本地 <code className="bg-blue-100 px-1.5 py-0.5 rounded">data/crm.json</code> 文件中</li>
+      <div className="bg-orange-50 rounded-xl p-5 border border-orange-100">
+        <h4 className="text-sm font-semibold text-orange-800 mb-2">💡 数据说明</h4>
+        <ul className="text-xs text-[#0A2540] space-y-1">
+          <li>· 所有数据存储在本地 <code className="bg-orange-100 px-1.5 py-0.5 rounded">data/crm.json</code> 文件中</li>
           <li>· 建议定期备份该文件以防数据丢失</li>
           <li>· 可随时通过"导出客户数据"功能下载 CSV 备份</li>
           <li>· 员工离职 → 改密码 → 新员工登录用原账号 → 客户数据无缝衔接</li>
@@ -196,7 +196,7 @@ function SeaPoolRulesSettings() {
         <button
           onClick={() => setRules(r => ({ ...r, enabled: !r.enabled }))}
           className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
-            rules.enabled ? 'bg-blue-600' : 'bg-gray-300'
+            rules.enabled ? 'bg-[#0A2540]' : 'bg-gray-300'
           }`}>
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
             rules.enabled ? 'translate-x-5' : ''
@@ -254,7 +254,7 @@ function SeaPoolRulesSettings() {
                 return (
                   <label key={s.value}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs cursor-pointer transition ${
-                      checked ? 'bg-blue-50 border-blue-300 text-blue-700' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
+                      checked ? 'bg-orange-50 border-orange-300 text-[#0A2540]' : 'bg-white border-gray-200 text-gray-600 hover:border-gray-300'
                     }`}>
                     <input
                       type="checkbox"
@@ -287,7 +287,7 @@ function SeaPoolRulesSettings() {
       )}
 
       <button onClick={save} disabled={saving}
-        className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 disabled:bg-blue-300 transition cursor-pointer disabled:cursor-not-allowed">
+        className="px-4 py-2 bg-[#0A2540] text-white text-sm font-medium rounded-lg hover:bg-[#123455] disabled:opacity-40 transition cursor-pointer disabled:cursor-not-allowed">
         {saving ? '保存中...' : '保存规则'}
       </button>
     </div>
@@ -385,7 +385,7 @@ function NotificationSettings() {
         <button
           onClick={toggleNotify}
           className={`relative w-11 h-6 rounded-full transition-colors cursor-pointer ${
-            notifyEnabled ? 'bg-blue-600' : 'bg-gray-300'
+            notifyEnabled ? 'bg-[#0A2540]' : 'bg-gray-300'
           }`}>
           <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
             notifyEnabled ? 'translate-x-5' : ''
