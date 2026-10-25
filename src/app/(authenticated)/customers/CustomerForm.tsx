@@ -18,6 +18,7 @@ const channels = [
   { value: 'website', label: '独立站' },
   { value: 'exhibition', label: '展会' },
   { value: 'referral', label: '转介绍' },
+  { value: 'self_dev', label: '自主开发' },
   { value: 'other', label: '其他' },
 ];
 

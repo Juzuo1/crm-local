@@ -29,7 +29,7 @@ interface Customer {
 
 const channelLabels: Record<string, string> = {
   facebook: 'Facebook', tiktok: 'TikTok', alibaba: '阿里国际站',
-  website: '独立站', exhibition: '展会', referral: '转介绍', other: '其他'
+  website: '独立站', exhibition: '展会', referral: '转介绍', self_dev: '自主开发', other: '其他'
 };
 
 const levelColors: Record<string, string> = {
@@ -48,7 +48,7 @@ const segmentGroups = [
 
 function classifySegment(seg: SegmentWithCount): string {
   const n = seg.name;
-  if (n.includes('Facebook') || n.includes('TikTok') || n.includes('阿里') || n.includes('独立站') || n.includes('展会')) return 'channel';
+  if (n.includes('Facebook') || n.includes('TikTok') || n.includes('阿里') || n.includes('独立站') || n.includes('展会') || n.includes('自主开发')) return 'channel';
   if (n.includes('A级') || n.includes('B级') || n.includes('C级') || n.includes('D级')) return 'level';
   if (n.includes('近') && n.includes('天新增')) return 'time';
   if (n.includes('跟进') || n.includes('未跟进')) return 'followup';

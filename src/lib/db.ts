@@ -785,6 +785,7 @@ function getSystemSegmentDefs(): Omit<Segment, 'id' | 'created_by' | 'created_at
     { name: '阿里国际站客户', type: 'system', filters: { channels: ['alibaba'] } },
     { name: '独立站客户', type: 'system', filters: { channels: ['website'] } },
     { name: '展会客户', type: 'system', filters: { channels: ['exhibition'] } },
+    { name: '自主开发客户', type: 'system', filters: { channels: ['self_dev'] } },
     // 按等级
     { name: 'A级-高价值客户', type: 'system', filters: { levels: ['A'] } },
     { name: 'B级-意向强客户', type: 'system', filters: { levels: ['B'] } },

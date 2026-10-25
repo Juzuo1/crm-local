@@ -59,11 +59,11 @@ export const STAGE_SOLID: Record<string, string> = {
 // ---------- 来源渠道 ----------
 export const CHANNEL_LABELS: Record<string, string> = {
   facebook: 'Facebook', tiktok: 'TikTok', alibaba: '阿里国际站',
-  website: '独立站', exhibition: '展会', referral: '转介绍', other: '其他',
+  website: '独立站', exhibition: '展会', referral: '转介绍', self_dev: '自主开发', other: '其他',
 };
 export const CHANNEL_SOLID: Record<string, string> = {
   facebook: '#1877F2', tiktok: '#0A2540', alibaba: '#FF6B35',
-  website: '#3B82F6', exhibition: '#8B5CF6', referral: '#10B981', other: '#94A3B8',
+  website: '#3B82F6', exhibition: '#8B5CF6', referral: '#10B981', self_dev: '#0D9488', other: '#94A3B8',
 };
 
 // ---------- 跟进方式 ----------
