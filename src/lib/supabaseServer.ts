@@ -12,6 +12,17 @@ const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 // 未配置环境变量时（如本地开发、或未部署）返回 false，存储层会自动回退到本地文件。
 export const isSupabaseConfigured = Boolean(supabaseUrl && serviceRoleKey);
 
+// 诊断用：返回当前生效的 Supabase 主机地址（仅主机名，不含任何密钥）。
+// 用于部署后核对环境变量是否填对，例如 https://xxxx.supabase.co -> "xxxx.supabase.co"
+export const supabaseHost = (() => {
+  if (!supabaseUrl) return null;
+  try {
+    return new URL(supabaseUrl).host;
+  } catch {
+    return `INVALID_URL(${supabaseUrl})`;
+  }
+})();
+
 export const supabaseAdmin = isSupabaseConfigured
   ? createClient(supabaseUrl as string, serviceRoleKey as string, {
       auth: { persistSession: false, autoRefreshToken: false },

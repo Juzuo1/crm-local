@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { isSupabaseConfigured, supabaseAdmin } from '@/lib/supabaseServer';
+import { isSupabaseConfigured, supabaseAdmin, supabaseHost } from '@/lib/supabaseServer';
 import { listUsers, listCustomers } from '@/lib/db';
 
 export const dynamic = 'force-dynamic';
@@ -13,6 +13,8 @@ export async function GET() {
     ok: false,
     mode: isSupabaseConfigured ? 'supabase' : 'local-file',
     supabaseConfigured: isSupabaseConfigured,
+    supabaseHost,
+    expectedHost: 'ebrvwrvwgsupfltqcfcu.supabase.co',
     timestamp: new Date().toISOString(),
   };
 
