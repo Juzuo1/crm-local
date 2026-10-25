@@ -37,6 +37,11 @@ const DEFAULT_SEA_POOL_RULES: SeaPoolRules = {
 
 // 内存工作副本（单实例内复用；云端模式下每次 saveDb 都会写回 Supabase，冷启动从云端拉取最新）
 let db: Database | null = null;
+let dbLoadedAt = 0;
+// Vercel 等 Serverless 环境下每个请求可能落在不同实例上，
+// 内存缓存若永不失效，会导致「A 实例建号、B 实例读不到」的数据不一致。
+// 这里给缓存设置很短的过期时间，保证跨实例的数据几秒内即可一致。
+const DB_CACHE_TTL_MS = 2000;
 
 function now(): string {
   return new Date().toISOString().replace('T', ' ').slice(0, 19);
@@ -48,13 +53,16 @@ function nextId(collection: { id: number }[]): number {
 }
 
 // 首次加载时补齐默认数据（角色权限、公海规则、种子管理员）
-function ensureSeed(): void {
+function ensureSeed(): boolean {
   const database = db!;
+  let changed = false;
   if (!database.role_permissions || Object.keys(database.role_permissions).length === 0) {
     database.role_permissions = JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS));
+    changed = true;
   }
   if (!database.sea_pool_rules) {
     database.sea_pool_rules = { ...DEFAULT_SEA_POOL_RULES };
+    changed = true;
   }
   if (database.users.length === 0) {
     const hash = bcrypt.hashSync('admin123', 10);
@@ -68,11 +76,14 @@ function ensureSeed(): void {
       is_active: 1,
       created_at: now(),
     });
+    changed = true;
   }
+  return changed;
 }
 
 async function loadDb(): Promise<Database> {
-  if (db) return db;
+  const nowMs = Date.now();
+  if (db && nowMs - dbLoadedAt < DB_CACHE_TTL_MS) return db;
 
   if (isSupabaseConfigured && supabaseAdmin) {
     const [users, customers, followups, segments, departments, rolePerms, auditLogs, seaRules] =
@@ -87,7 +98,8 @@ async function loadDb(): Promise<Database> {
         supabaseAdmin.from('crm_sea_pool_rules').select('*'),
       ]);
 
-    db = {
+    // 原地更新同一个对象引用：避免并发请求期间 db 被整体替换导致写入丢失
+    const fresh: Database = {
       users: (users.data as unknown as User[]) || [],
       customers: (customers.data as unknown as Customer[]) || [],
       followups: (followups.data as unknown as Followup[]) || [],
@@ -107,29 +119,31 @@ async function loadDb(): Promise<Database> {
           ? (seaRules.data as unknown as SeaPoolRules[])[0]
           : { ...DEFAULT_SEA_POOL_RULES },
     };
-    ensureSeed();
-    await saveDb();
+    if (!db) db = { ...fresh };
+    else Object.assign(db, fresh);
+    dbLoadedAt = nowMs;
+    if (ensureSeed()) await saveDb();
     return db;
   }
 
   // —— 本地文件回退 ——
   if (!fs.existsSync(DB_DIR)) fs.mkdirSync(DB_DIR, { recursive: true });
-  if (fs.existsSync(DB_FILE)) {
-    db = JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'));
-  } else {
-    db = {
-      users: [],
-      customers: [],
-      followups: [],
-      segments: [],
-      departments: [],
-      role_permissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)),
-      audit_logs: [],
-      sea_pool_rules: { ...DEFAULT_SEA_POOL_RULES },
-    };
-  }
-  ensureSeed();
-  saveDbLocal();
+  const fresh: Database = fs.existsSync(DB_FILE)
+    ? JSON.parse(fs.readFileSync(DB_FILE, 'utf-8'))
+    : {
+        users: [],
+        customers: [],
+        followups: [],
+        segments: [],
+        departments: [],
+        role_permissions: JSON.parse(JSON.stringify(DEFAULT_ROLE_PERMISSIONS)),
+        audit_logs: [],
+        sea_pool_rules: { ...DEFAULT_SEA_POOL_RULES },
+      };
+  if (!db) db = { ...fresh };
+  else Object.assign(db, fresh);
+  dbLoadedAt = nowMs;
+  if (ensureSeed()) saveDbLocal();
   return db!;
 }
 
@@ -344,9 +358,13 @@ export interface Followup {
 
 // ========== 用户查询 ==========
 
+// 邮箱按「去空格 + 转小写」比较，避免大小写或首尾空格导致登录失败
+const normalizeEmail = (email: string) => String(email || '').trim().toLowerCase();
+
 export async function findUserByEmail(email: string): Promise<User | undefined> {
   const data = await loadDb();
-  return data.users.find((u) => u.email === email);
+  const target = normalizeEmail(email);
+  return data.users.find((u) => normalizeEmail(u.email) === target);
 }
 
 export async function findUserById(id: number): Promise<User | undefined> {
@@ -363,6 +381,7 @@ export async function createUser(user: Omit<User, 'id' | 'created_at'>): Promise
   const data = await loadDb();
   const newUser: User = {
     ...user,
+    email: normalizeEmail(user.email),
     id: nextId(data.users),
     created_at: now(),
   };
@@ -388,7 +407,7 @@ export async function updateUser(
   const user = data.users.find((u) => u.id === id);
   if (user) {
     if (updates.name) user.name = updates.name;
-    if (updates.email) user.email = updates.email;
+    if (updates.email) user.email = normalizeEmail(updates.email);
     if (updates.role) user.role = updates.role as User['role'];
     await saveDb();
   }
