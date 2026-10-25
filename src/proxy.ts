@@ -1,18 +1,20 @@
 import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
+import env from '@/lib/env';
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET || 'crm-local-dev-secret-change-in-production');
+const secret = new TextEncoder().encode(env.JWT_SECRET);
+const cookieName = env.COOKIE_NAME;
 
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // 公开路由
-  if (pathname === '/login' || pathname.startsWith('/api/auth')) {
+  if (pathname === '/login' || pathname.startsWith('/api/auth') || pathname === '/api/health') {
     return NextResponse.next();
   }
 
-  const token = request.cookies.get('crm_token')?.value;
+  const token = request.cookies.get(cookieName)?.value;
 
   if (!token) {
     return NextResponse.redirect(new URL('/login', request.url));
@@ -23,7 +25,7 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   } catch {
     const response = NextResponse.redirect(new URL('/login', request.url));
-    response.cookies.delete('crm_token');
+    response.cookies.delete(cookieName);
     return response;
   }
 }
