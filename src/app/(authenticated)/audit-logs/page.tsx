@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { formatDateTime } from '@/lib/utils';
+import Icon from '@/components/Icon';
 
 interface AuditItem {
   id: number;
@@ -156,7 +157,7 @@ export default function AuditLogsPage() {
 
   return (
     <div className="max-w-6xl mx-auto space-y-5">
-      <h2 className="text-xl font-bold text-gray-900">📜 操作日志</h2>
+      <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2"><Icon name="document" className="w-6 h-6 text-[#0A2540]" /> 操作日志</h2>
 
       {/* 筛选栏 */}
       <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
@@ -254,8 +255,9 @@ export default function AuditLogsPage() {
                           </span>
                         </td>
                         <td className="px-4 py-3">
-                          <span className="text-xs text-gray-400">
-                            {isExpanded ? '▲ 收起' : '▼ 展开'}
+                          <span className="text-xs text-gray-400 inline-flex items-center gap-1">
+                            <Icon name="chevron-down" className={`w-3.5 h-3.5 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
+                            {isExpanded ? '收起' : '展开'}
                           </span>
                         </td>
                       </tr>

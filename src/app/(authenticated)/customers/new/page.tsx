@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import CustomerForm from '../CustomerForm';
+import Icon from '@/components/Icon';
 
 export default function NewCustomerPage() {
   const router = useRouter();
@@ -54,7 +55,7 @@ export default function NewCustomerPage() {
       )}
 
       <div className="px-4 py-2.5 bg-orange-50 border border-orange-100 rounded-lg text-xs text-[#0A2540] flex items-center gap-2">
-        <span>💡</span> 业务员创建的客户自动归属于自己，管理员创建的客户可在客户列表中分配负责人
+        <Icon name="lightbulb" className="w-4 h-4 shrink-0 text-[#FF6B35]" /> 业务员创建的客户自动归属于自己，管理员创建的客户可在客户列表中分配负责人
       </div>
 
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">

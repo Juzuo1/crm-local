@@ -74,7 +74,7 @@ export default function Sidebar({ user }: { user: SessionUser }) {
     <aside className="w-56 bg-[#0A2540] text-white flex flex-col shrink-0">
       {/* 品牌区：蓝紫渐变圆环闪电 Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-        <Logo size={36} />
+        <Logo size={36} variant="light" />
         <div>
           <div className="text-sm font-semibold tracking-wide">YIMU 客户管理</div>
           <div className="text-[11px] text-slate-400">外贸版 · CRM</div>

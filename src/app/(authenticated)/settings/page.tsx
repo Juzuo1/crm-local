@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import Icon from '@/components/Icon';
 
 export default function SettingsPage() {
   const [stats, setStats] = useState({ users: 0, customers: 0, followups: 0 });
@@ -78,8 +79,8 @@ export default function SettingsPage() {
         <div className="space-y-3">
           <Link href="/users"
             className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-orange-200 hover:bg-orange-50 transition">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">👥</span>
+              <div className="flex items-center gap-3">
+              <Icon name="user" className="w-6 h-6 text-[#0A2540] shrink-0" />
               <div>
                 <div className="text-sm font-medium text-gray-900">用户管理</div>
                 <div className="text-xs text-gray-500">创建子账号、编辑信息、重置密码、客户交接</div>
@@ -90,8 +91,8 @@ export default function SettingsPage() {
 
           <Link href="/segments"
             className="flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-orange-200 hover:bg-orange-50 transition">
-            <div className="flex items-center gap-3">
-              <span className="text-xl">📋</span>
+              <div className="flex items-center gap-3">
+                <Icon name="segments" className="w-6 h-6 text-[#0A2540] shrink-0" />
               <div>
                 <div className="text-sm font-medium text-gray-900">客群管理</div>
                 <div className="text-xs text-gray-500">管理预设客群、创建自定义客群</div>
@@ -104,7 +105,7 @@ export default function SettingsPage() {
             <button onClick={exportData}
               className="w-full flex items-center justify-between p-4 rounded-lg border border-gray-100 hover:border-green-200 hover:bg-green-50 transition cursor-pointer">
               <div className="flex items-center gap-3">
-                <span className="text-xl">📥</span>
+                <Icon name="download" className="w-6 h-6 text-[#0A2540] shrink-0" />
                 <div>
                   <div className="text-sm font-medium text-gray-900 text-left">导出客户数据</div>
                   <div className="text-xs text-gray-500">导出全部客户为 CSV 文件（Excel 可打开）</div>
@@ -118,19 +119,19 @@ export default function SettingsPage() {
 
       {/* 公海规则 */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="font-semibold text-gray-900 mb-4">🌊 公海规则设置</h3>
+        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Icon name="sea" className="w-5 h-5 text-[#0A2540]" /> 公海规则设置</h3>
         <SeaPoolRulesSettings />
       </div>
 
       {/* 通知偏好 */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-        <h3 className="font-semibold text-gray-900 mb-4">🔔 跟进提醒设置</h3>
+        <h3 className="font-semibold text-gray-900 mb-4 flex items-center gap-2"><Icon name="bell" className="w-5 h-5 text-[#0A2540]" /> 跟进提醒设置</h3>
         <NotificationSettings />
       </div>
 
       {/* 数据说明 */}
       <div className="bg-orange-50 rounded-xl p-5 border border-orange-100">
-        <h4 className="text-sm font-semibold text-orange-800 mb-2">💡 数据说明</h4>
+        <h4 className="text-sm font-semibold text-orange-800 mb-2 flex items-center gap-1.5"><Icon name="lightbulb" className="w-4 h-4 text-[#FF6B35]" /> 数据说明</h4>
         <ul className="text-xs text-[#0A2540] space-y-1">
           <li>· 所有数据存储在本地 <code className="bg-orange-100 px-1.5 py-0.5 rounded">data/crm.json</code> 文件中</li>
           <li>· 建议定期备份该文件以防数据丢失</li>
@@ -149,6 +150,7 @@ function SeaPoolRulesSettings() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
+  const [msgType, setMsgType] = useState<'success' | 'error' | ''>('');
 
   useEffect(() => {
     fetch('/api/sea-pool/rules')
@@ -165,9 +167,10 @@ function SeaPoolRulesSettings() {
       body: JSON.stringify(rules),
     });
     const json = await res.json();
-    setMsg(json.success ? '✅ 保存成功' : '❌ 保存失败');
+    setMsg(json.success ? '保存成功' : '保存失败');
+    setMsgType(json.success ? 'success' : 'error');
     setSaving(false);
-    setTimeout(() => setMsg(''), 3000);
+    setTimeout(() => { setMsg(''); setMsgType(''); }, 3000);
   }
 
   const stages = [
@@ -279,9 +282,10 @@ function SeaPoolRulesSettings() {
       )}
 
       {msg && (
-        <div className={`text-sm p-2.5 rounded-lg ${
-          msg.startsWith('✅') ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
+        <div className={`text-sm p-2.5 rounded-lg flex items-center gap-1.5 ${
+          msgType === 'success' ? 'bg-green-50 text-green-700 border border-green-100' : 'bg-red-50 text-red-700 border border-red-100'
         }`}>
+          <Icon name={msgType === 'success' ? 'check' : 'x'} className="w-4 h-4 shrink-0" />
           {msg}
         </div>
       )}
@@ -300,6 +304,7 @@ function NotificationSettings() {
   const [notifyPermission, setNotifyPermission] = useState<string>('default');
   const [notifyHour, setNotifyHour] = useState(9);
   const [testStatus, setTestStatus] = useState('');
+  const [testType, setTestType] = useState<'success' | 'error' | 'warn' | ''>('');
 
   useEffect(() => {
     // 从 localStorage 读取设置
@@ -320,7 +325,8 @@ function NotificationSettings() {
 
   async function requestPermission() {
     if (!('Notification' in window)) {
-      setTestStatus('⚠ 当前浏览器不支持桌面通知');
+      setTestStatus('当前浏览器不支持桌面通知');
+      setTestType('warn');
       return;
     }
     const perm = await Notification.requestPermission();
@@ -328,9 +334,11 @@ function NotificationSettings() {
     if (perm === 'granted') {
       saveSettings(true, notifyHour);
       setNotifyEnabled(true);
-      setTestStatus('✅ 通知权限已开启');
+      setTestStatus('通知权限已开启');
+      setTestType('success');
     } else {
-      setTestStatus('❌ 通知权限被拒绝，请在浏览器设置中允许通知');
+      setTestStatus('通知权限被拒绝，请在浏览器设置中允许通知');
+      setTestType('error');
     }
   }
 
@@ -346,19 +354,22 @@ function NotificationSettings() {
 
   function testNotification() {
     if (!('Notification' in window)) {
-      setTestStatus('⚠ 当前浏览器不支持桌面通知');
+      setTestStatus('当前浏览器不支持桌面通知');
+      setTestType('warn');
       return;
     }
     if (Notification.permission !== 'granted') {
-      setTestStatus('⚠ 请先开启通知权限');
+      setTestStatus('请先开启通知权限');
+      setTestType('warn');
       return;
     }
     new Notification('CRM 跟进提醒', {
       body: '这是一条测试通知。如果有客户需要跟进，您将收到类似提醒！',
       icon: '/favicon.ico',
     });
-    setTestStatus('✅ 测试通知已发送，请查看桌面右上角');
-    setTimeout(() => setTestStatus(''), 3000);
+    setTestStatus('测试通知已发送，请查看桌面右上角');
+    setTestType('success');
+    setTimeout(() => { setTestStatus(''); setTestType(''); }, 3000);
   }
 
   // 获取当前登录用户
@@ -419,26 +430,27 @@ function NotificationSettings() {
       <div className="text-xs text-gray-500">
         浏览器通知权限：{' '}
         {notifyPermission === 'granted' ? (
-          <span className="text-green-600 font-medium">✅ 已允许</span>
+          <span className="text-green-600 font-medium inline-flex items-center gap-1"><Icon name="check" className="w-3.5 h-3.5" />已允许</span>
         ) : notifyPermission === 'denied' ? (
-          <span className="text-red-600 font-medium">❌ 已拒绝（请在浏览器设置中修改）</span>
+          <span className="text-red-600 font-medium inline-flex items-center gap-1"><Icon name="x" className="w-3.5 h-3.5" />已拒绝（请在浏览器设置中修改）</span>
         ) : (
-          <span className="text-orange-600 font-medium">⚠ 未设置（首次开启时会请求权限）</span>
+          <span className="text-orange-600 font-medium inline-flex items-center gap-1"><Icon name="warning" className="w-3.5 h-3.5" />未设置（首次开启时会请求权限）</span>
         )}
       </div>
 
       {/* 测试按钮 */}
       <button onClick={testNotification}
-        className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition cursor-pointer">
-        🔔 发送测试通知
+        className="px-4 py-2 text-sm bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition cursor-pointer inline-flex items-center gap-2">
+        <Icon name="bell" className="w-4 h-4" /> 发送测试通知
       </button>
 
       {testStatus && (
-        <div className={`text-xs p-2.5 rounded-lg ${
-          testStatus.startsWith('✅') ? 'bg-green-50 text-green-700 border border-green-100' :
-          testStatus.startsWith('❌') || testStatus.startsWith('⚠') ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
+        <div className={`text-xs p-2.5 rounded-lg flex items-center gap-1.5 ${
+          testType === 'success' ? 'bg-green-50 text-green-700 border border-green-100' :
+          testType === 'error' || testType === 'warn' ? 'bg-yellow-50 text-yellow-700 border border-yellow-100' :
           'bg-gray-50 text-gray-600'
         }`}>
+          <Icon name={testType === 'success' ? 'check' : testType === 'error' ? 'x' : 'warning'} className="w-3.5 h-3.5 shrink-0" />
           {testStatus}
         </div>
       )}

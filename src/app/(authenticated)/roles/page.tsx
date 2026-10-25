@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { PERMISSION_GROUPS, RolePermissions, RolePermissionConfig, DataScope } from '@/lib/permissions';
+import Icon from '@/components/Icon';
 
 const roleLabels: Record<string, string> = {
   admin: '管理员',
@@ -137,8 +138,9 @@ export default function RolesPage() {
 
       {/* 当前角色说明 */}
       {isAdminRole && (
-        <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-[#0A2540]">
-          💡 管理员拥有全部权限，不可修改。如需限制管理员权限，请先创建新角色。
+        <div className="bg-orange-50 border border-orange-200 rounded-lg px-4 py-3 text-sm text-[#0A2540] flex items-start gap-2">
+          <Icon name="lightbulb" className="w-4 h-4 shrink-0 text-[#FF6B35] mt-0.5" />
+          <span>管理员拥有全部权限，不可修改。如需限制管理员权限，请先创建新角色。</span>
         </div>
       )}
 
@@ -156,7 +158,7 @@ export default function RolesPage() {
               <button
                 onClick={() => toggleGroup(group.key)}
                 className="w-full flex items-center gap-3 px-5 py-4 hover:bg-gray-50 transition cursor-pointer text-left">
-                <span className="text-lg">{group.icon}</span>
+                <Icon name={group.icon} className="w-5 h-5 text-[#FF6B35] shrink-0" />
                 <div className="flex-1">
                   <h3 className="text-sm font-semibold text-gray-900">{group.label}</h3>
                   <p className="text-xs text-gray-400 mt-0.5">
@@ -168,7 +170,7 @@ export default function RolesPage() {
                     )}
                   </p>
                 </div>
-                <span className="text-gray-300 text-sm">{isExpanded ? '▼' : '▶'}</span>
+                <Icon name="chevron-down" className={`text-gray-300 w-4 h-4 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
               </button>
 
               {/* 权限列表 */}
@@ -215,7 +217,7 @@ export default function RolesPage() {
                             <div className="text-xs text-gray-400">{perm.desc}</div>
                           </div>
                           {!isAdminRole && checked && (
-                            <span className="text-xs text-green-500 font-medium">✓</span>
+                            <Icon name="check" className="w-4 h-4 text-green-500 shrink-0" />
                           )}
                         </label>
                       );

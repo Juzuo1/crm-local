@@ -31,7 +31,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'dashboard',
     label: '仪表盘',
-    icon: '📊',
+    icon: 'dashboard',
     hasDataScope: true,
     permissions: [
       { key: 'dashboard.view', label: '查看仪表盘', desc: '访问仪表盘页面，查看统计数据' },
@@ -42,7 +42,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'customers',
     label: '客户管理',
-    icon: '👥',
+    icon: 'users',
     hasDataScope: true,
     permissions: [
       { key: 'customers.view', label: '查看客户列表', desc: '浏览和搜索客户' },
@@ -68,7 +68,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'followups',
     label: '跟进记录',
-    icon: '📝',
+    icon: 'chat',
     hasDataScope: true,
     permissions: [
       { key: 'followups.view', label: '查看跟进记录', desc: '查看跟进时间线' },
@@ -82,7 +82,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'segments',
     label: '客群管理',
-    icon: '📊',
+    icon: 'segments',
     hasDataScope: true,
     permissions: [
       { key: 'segments.view', label: '查看客群', desc: '浏览系统预设和自定义客群' },
@@ -94,7 +94,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'departments',
     label: '部门管理',
-    icon: '🏢',
+    icon: 'building',
     hasDataScope: false,
     permissions: [
       { key: 'departments.view', label: '查看部门', desc: '查看部门列表和成员' },
@@ -111,7 +111,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'users',
     label: '用户管理',
-    icon: '👤',
+    icon: 'user',
     hasDataScope: false,
     permissions: [
       { key: 'users.view', label: '查看用户列表', desc: '浏览所有系统用户' },
@@ -127,7 +127,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'roles',
     label: '角色管理',
-    icon: '🔐',
+    icon: 'shield',
     hasDataScope: false,
     permissions: [
       { key: 'roles.view', label: '查看角色权限', desc: '查看各角色的权限配置' },
@@ -139,7 +139,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'sea_pool',
     label: '公海管理',
-    icon: '🌊',
+    icon: 'sea',
     hasDataScope: false,
     permissions: [
       { key: 'sea_pool.view', label: '查看公海', desc: '浏览公海客户列表' },
@@ -153,7 +153,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'audit',
     label: '操作日志',
-    icon: '📜',
+    icon: 'document',
     hasDataScope: false,
     permissions: [
       { key: 'audit.view', label: '查看操作日志', desc: '查看系统中的操作记录和变更历史' },
@@ -164,7 +164,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   {
     key: 'settings',
     label: '系统设置',
-    icon: '⚙️',
+    icon: 'settings',
     hasDataScope: false,
     permissions: [
       { key: 'settings.view', label: '查看系统设置', desc: '访问系统设置页面' },

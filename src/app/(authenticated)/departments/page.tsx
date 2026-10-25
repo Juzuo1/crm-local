@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Icon from '@/components/Icon';
 
 interface Department {
   id: number;
@@ -238,7 +239,7 @@ export default function DepartmentsPage() {
       {/* 部门列表 */}
       {departments.length === 0 ? (
         <div className="bg-white rounded-xl p-16 shadow-sm border border-gray-100 text-center">
-          <p className="text-5xl mb-4">🏢</p>
+          <p className="mb-4 text-[#0A2540]"><Icon name="building" className="w-14 h-14" /></p>
           <p className="text-gray-500 text-lg mb-2">暂无部门</p>
           <p className="text-gray-400 text-sm">点击右上角"新建部门"创建第一个部门</p>
         </div>
@@ -250,7 +251,7 @@ export default function DepartmentsPage() {
               {/* 部门头部 */}
               <div className="flex items-center justify-between px-6 py-4 bg-gradient-to-r from-gray-50 to-white border-b border-gray-100">
                 <div className="flex items-center gap-3">
-                  <span className="text-2xl">🏢</span>
+                  <Icon name="building" className="w-7 h-7 text-[#0A2540] shrink-0" />
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900">{dept.name}</h3>
                     <p className="text-xs text-gray-500">
@@ -280,8 +281,9 @@ export default function DepartmentsPage() {
                   <h4 className="text-sm font-semibold text-gray-700 mb-3">添加成员到「{dept.name}」</h4>
 
                   {createdCredential && (
-                    <div className="mb-3 p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm">
-                      ✅ {createdCredential}
+                    <div className="mb-3 p-3 bg-green-100 border border-green-300 text-green-800 rounded-lg text-sm flex items-center gap-1.5">
+                      <Icon name="check" className="w-4 h-4 shrink-0" />
+                      {createdCredential}
                     </div>
                   )}
 
@@ -389,8 +391,8 @@ export default function DepartmentsPage() {
       {/* 未分配用户 */}
       {unassignedUsers.length > 0 && (
         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100">
-          <h3 className="text-sm font-semibold text-gray-500 mb-3">
-            📋 未分配部门的用户 ({unassignedUsers.length}人)
+          <h3 className="text-sm font-semibold text-gray-500 mb-3 flex items-center gap-2">
+            <Icon name="document" className="w-4 h-4" /> 未分配部门的用户 ({unassignedUsers.length}人)
           </h3>
           <div className="flex flex-wrap gap-2">
             {unassignedUsers.map(u => (

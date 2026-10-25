@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Icon from '@/components/Icon';
 
 interface SegmentWithCount {
   id: number;
@@ -37,12 +38,12 @@ const levelColors: Record<string, string> = {
 };
 
 const segmentGroups = [
-  { key: 'channel', title: '按渠道', icon: '📢' },
-  { key: 'level', title: '按客户等级', icon: '⭐' },
-  { key: 'time', title: '按建档时间', icon: '🕐' },
-  { key: 'followup', title: '跟进相关', icon: '📅' },
-  { key: 'combo', title: '组合客群', icon: '🔀' },
-  { key: 'custom', title: '自定义客群', icon: '✏️' },
+  { key: 'channel', title: '按渠道', icon: 'megaphone' },
+  { key: 'level', title: '按客户等级', icon: 'star' },
+  { key: 'time', title: '按建档时间', icon: 'clock' },
+  { key: 'followup', title: '跟进相关', icon: 'calendar' },
+  { key: 'combo', title: '组合客群', icon: 'shuffle' },
+  { key: 'custom', title: '自定义客群', icon: 'pencil' },
 ];
 
 function classifySegment(seg: SegmentWithCount): string {
@@ -160,7 +161,7 @@ export default function SegmentsPage() {
             className={`w-full text-left px-3 py-2 rounded-lg text-sm transition ${
               !selectedId ? 'bg-orange-50 text-[#0A2540] font-medium' : 'text-gray-600 hover:bg-gray-50'
             }`}>
-            📋 全部客户
+            <Icon name="list" className="w-4 h-4" /> 全部客户
           </button>
         </div>
 
@@ -215,8 +216,8 @@ export default function SegmentsPage() {
               <div key={group.key} className="mb-1">
                 <button onClick={() => toggleCollapse(group.key)}
                   className="w-full flex items-center gap-2 px-4 py-2 text-xs font-medium text-gray-500 hover:text-gray-700 cursor-pointer">
-                  <span>{isCollapsed ? '▶' : '▼'}</span>
-                  <span>{group.icon}</span>
+                  <Icon name="chevron-down" className={`w-4 h-4 text-gray-400 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                  <Icon name={group.icon} className="w-4 h-4 text-gray-400" />
                   <span>{group.title}</span>
                   <span className="ml-auto text-gray-300">{groupSegs.length}</span>
                 </button>
@@ -254,7 +255,7 @@ export default function SegmentsPage() {
         {!selectedId ? (
           <div className="flex items-center justify-center h-full text-gray-400">
             <div className="text-center">
-              <p className="text-5xl mb-4">📋</p>
+              <p className="mb-4 text-[#0A2540]"><Icon name="list" className="w-14 h-14" /></p>
               <p className="text-lg font-medium text-gray-500">选择左侧客群查看客户</p>
               <p className="text-sm mt-1">点击客群名称即可筛选对应客户</p>
             </div>
@@ -275,7 +276,7 @@ export default function SegmentsPage() {
 
             {customers.length === 0 ? (
               <div className="text-center py-16 text-gray-400">
-                <p className="text-3xl mb-2">📭</p>
+                <p className="mb-2 text-[#0A2540]/40"><Icon name="list" className="w-10 h-10" /></p>
                 <p>该客群暂无客户</p>
               </div>
             ) : (
