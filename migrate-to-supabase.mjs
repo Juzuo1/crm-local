@@ -62,24 +62,38 @@ async function main() {
     const { error } = await supabase.from('crm_followups').upsert(db.followups, { onConflict: 'id' });
     if (error) throw error;
   }
+  // 以下三张表用 upsert 而非「先删后插」：删除在某些 RLS 配置下会被拦截，
+  // 导致后续 insert 撞主键。upsert 幂等，可重复执行。
   if (db.departments?.length) {
-    await supabase.from('crm_departments').delete().neq('id', -1);
-    const { error } = await supabase.from('crm_departments').insert(db.departments);
+    const { error } = await supabase.from('crm_departments').upsert(db.departments, { onConflict: 'id' });
     if (error) throw error;
   }
   if (db.segments?.length) {
-    await supabase.from('crm_segments').delete().neq('id', -1);
-    const { error } = await supabase.from('crm_segments').insert(db.segments);
+    const { error } = await supabase.from('crm_segments').upsert(db.segments, { onConflict: 'id' });
     if (error) throw error;
   }
   if (db.role_permissions) {
     const rp = Object.entries(db.role_permissions).map(([role, permissions]) => ({ role, permissions }));
-    await supabase.from('crm_role_permissions').delete().neq('role', '__never__');
-    const { error } = await supabase.from('crm_role_permissions').insert(rp);
+    const { error } = await supabase.from('crm_role_permissions').upsert(rp, { onConflict: 'role' });
     if (error) throw error;
   }
   if (db.audit_logs?.length) {
-    const { error } = await supabase.from('crm_audit_logs').upsert(db.audit_logs, { onConflict: 'id' });
+    // 清洗：云端 crm_audit_logs 多列为 NOT NULL，本地少量历史记录存在 null，这里补默认值
+    const pad = (n) => String(n).padStart(2, '0');
+    const d0 = new Date();
+    const nowText = `${d0.getFullYear()}-${pad(d0.getMonth() + 1)}-${pad(d0.getDate())} ${pad(d0.getHours())}:${pad(d0.getMinutes())}:${pad(d0.getSeconds())}`;
+    const logs = db.audit_logs.map((l) => ({
+      ...l,
+      user_id: l.user_id ?? 0,
+      user_name: l.user_name ?? '',
+      action: l.action ?? '',
+      target_type: l.target_type ?? '',
+      target_id: l.target_id ?? 0,
+      target_name: l.target_name ?? '',
+      detail: l.detail ?? {},
+      created_at: l.created_at ?? nowText,
+    }));
+    const { error } = await supabase.from('crm_audit_logs').upsert(logs, { onConflict: 'id' });
     if (error) throw error;
   }
   if (db.sea_pool_rules) {
