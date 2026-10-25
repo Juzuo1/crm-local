@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { SessionUser } from '@/lib/auth';
 import Icon from '@/components/Icon';
+import Logo from '@/components/Logo';
 import { avatarColor } from '@/lib/ui';
 
 interface MenuItem {
@@ -71,11 +72,9 @@ export default function Sidebar({ user }: { user: SessionUser }) {
 
   return (
     <aside className="w-56 bg-[#0A2540] text-white flex flex-col shrink-0">
-      {/* 品牌区：蓝紫渐变圆环闪电，呼应 YIMU Logo */}
+      {/* 品牌区：蓝紫渐变圆环闪电 Logo */}
       <div className="flex items-center gap-3 px-5 py-5 border-b border-white/10">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <Icon name="lightning" className="w-5 h-5 text-white" />
-        </div>
+        <Logo size={36} />
         <div>
           <div className="text-sm font-semibold tracking-wide">YIMU 客户管理</div>
           <div className="text-[11px] text-slate-400">外贸版 · CRM</div>
