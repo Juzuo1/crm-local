@@ -6,9 +6,9 @@ export async function GET() {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  const { allowed, visibleUserIds } = resolveAccess(user.id, user.role, 'dashboard', 'dashboard.view');
+  const { allowed, visibleUserIds } = await resolveAccess(user.id, user.role, 'dashboard', 'dashboard.view');
   if (!allowed) return NextResponse.json({ error: '无权访问' }, { status: 403 });
 
-  const stats = getDashboardStats(visibleUserIds);
+  const stats = await getDashboardStats(visibleUserIds);
   return NextResponse.json(stats);
 }

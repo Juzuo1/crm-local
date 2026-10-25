@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
   const segmentId = searchParams.get('segment');
 
   // 权限检查 + 获取可见范围
-  const access = resolveAccess(user.id, user.role, 'customers', 'customers.view');
+  const access = await resolveAccess(user.id, user.role, 'customers', 'customers.view');
   if (!access.allowed) return NextResponse.json({ error: '无权访问' }, { status: 403 });
   const visibleUserIds = access.visibleUserIds;
 
@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
   let segmentFilters = undefined;
   let segmentName = '';
   if (segmentId) {
-    const segments = listSegments(visibleUserIds);
+    const segments = await listSegments(visibleUserIds);
     const seg = segments.find(s => s.id === parseInt(segmentId));
     if (seg) {
       segmentFilters = seg.filters;
@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  const result = listCustomers({
+  const result = await listCustomers({
     search: searchParams.get('search') || undefined,
     country: searchParams.get('country') || undefined,
     channel: searchParams.get('channel') || undefined,
@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
   }
 
   // 附加负责人姓名
-  const allUsers = listUsers();
+  const allUsers = await listUsers();
   const userMap: Record<number, string> = {};
   allUsers.forEach(u => { userMap[u.id] = u.name; });
   const dataWithUser = finalData.map(c => ({
@@ -60,8 +60,8 @@ export async function GET(request: NextRequest) {
   }));
 
   // 根据权限决定是否隐藏手机号和邮箱
-  const canViewPhone = hasPermission(user.role, 'customers.view_phone');
-  const canViewEmail = hasPermission(user.role, 'customers.view_email');
+  const canViewPhone = await hasPermission(user.role, 'customers.view_phone');
+  const canViewEmail = await hasPermission(user.role, 'customers.view_email');
   const maskedData = dataWithUser.map(c => ({
     ...c,
     phone: canViewPhone ? c.phone : (c.phone ? '***' : ''),
@@ -76,7 +76,7 @@ export async function GET(request: NextRequest) {
     pageSize: 20,
     totalPages: Math.ceil(total / 20),
     segmentName,
-    users: hasPermission(user.role, 'customers.assign')
+    users: await hasPermission(user.role, 'customers.assign')
       ? allUsers.filter(u => u.role === 'agent' || u.role === 'manager')
       : [],
   });
@@ -87,7 +87,7 @@ export async function PATCH(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'customers.assign')) {
+  if (!await hasPermission(user.role, 'customers.assign')) {
     return NextResponse.json({ error: '无权操作' }, { status: 403 });
   }
 
@@ -100,13 +100,13 @@ export async function PATCH(request: NextRequest) {
 
   let count = 0;
   for (const cid of customer_ids) {
-    updateCustomer(cid, { assigned_to: assigned_to || null });
+    await updateCustomer(cid, { assigned_to: assigned_to || null });
     count++;
   }
 
   // 审计日志
-  const targetUser = assigned_to ? listUsers().find(u => u.id === assigned_to) : null;
-  addAuditLog({
+  const targetUser = assigned_to ? (await listUsers()).find(u => u.id === assigned_to) : null;
+  await addAuditLog({
     user_id: user.id,
     user_name: user.name,
     action: 'customer.assign',
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'customers.create')) {
+  if (!await hasPermission(user.role, 'customers.create')) {
     return NextResponse.json({ error: '无权新增客户' }, { status: 403 });
   }
 
@@ -134,10 +134,10 @@ export async function POST(request: NextRequest) {
   }
 
   // 业务员创建的客户自动归属于自己
-  const canAssign = hasPermission(user.role, 'customers.assign');
+  const canAssign = await hasPermission(user.role, 'customers.assign');
   const assignedTo = canAssign ? (body.assigned_to || null) : user.id;
 
-  const customer = createCustomer({
+  const customer = await createCustomer({
     contact_name: body.contact_name,
     position: body.position,
     phone: body.phone,
@@ -155,7 +155,7 @@ export async function POST(request: NextRequest) {
   });
 
   // 审计日志
-  addAuditLog({
+  await addAuditLog({
     user_id: user.id,
     user_name: user.name,
     action: 'customer.create',

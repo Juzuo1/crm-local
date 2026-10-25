@@ -6,14 +6,14 @@ export async function GET() {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  const access = resolveAccess(user.id, user.role, 'segments', 'segments.view');
+  const access = await resolveAccess(user.id, user.role, 'segments', 'segments.view');
   if (!access.allowed) return NextResponse.json({ error: '无权访问' }, { status: 403 });
 
-  const segments = listSegments(access.visibleUserIds);
+  const segments = await listSegments(access.visibleUserIds);
 
   return NextResponse.json({
     segments,
-    canCreate: hasPermission(user.role, 'segments.create'),
+    canCreate: await hasPermission(user.role, 'segments.create'),
     role: user.role,
   });
 }
@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'segments.create')) {
+  if (!await hasPermission(user.role, 'segments.create')) {
     return NextResponse.json({ error: '无权创建客群' }, { status: 403 });
   }
 
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '客群名称和筛选条件必填' }, { status: 400 });
   }
 
-  const segment = createCustomSegment({
+  const segment = await createCustomSegment({
     name: body.name,
     filters: body.filters,
     created_by: user.id,
@@ -44,14 +44,14 @@ export async function DELETE(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'segments.create')) {
+  if (!await hasPermission(user.role, 'segments.create')) {
     return NextResponse.json({ error: '无权删除客群' }, { status: 403 });
   }
 
   const { searchParams } = request.nextUrl;
   const id = parseInt(searchParams.get('id') || '0');
 
-  const ok = deleteSegment(id);
+  const ok = await deleteSegment(id);
   if (!ok) {
     return NextResponse.json({ error: '删除失败（系统客群不可删除）' }, { status: 400 });
   }

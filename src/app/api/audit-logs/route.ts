@@ -8,12 +8,12 @@ export async function GET(request: NextRequest) {
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   // 操作日志查看权限：管理员和主管
-  const access = resolveAccess(user.id, user.role, 'audit', 'audit.view');
+  const access = await resolveAccess(user.id, user.role, 'audit', 'audit.view');
   if (!access.allowed) return NextResponse.json({ error: '无权访问' }, { status: 403 });
 
   const { searchParams } = request.nextUrl;
 
-  const result = listAuditLogs({
+  const result = await listAuditLogs({
     userId: searchParams.get('userId') ? parseInt(searchParams.get('userId')!) : undefined,
     action: searchParams.get('action') || undefined,
     targetType: searchParams.get('targetType') || undefined,
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
   });
 
   // 返回用户列表供筛选
-  const allUsers = listUsers().map(u => ({ id: u.id, name: u.name }));
+  const allUsers = (await listUsers()).map(u => ({ id: u.id, name: u.name }));
 
   return NextResponse.json({
     data: result.data,

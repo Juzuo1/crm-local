@@ -7,7 +7,7 @@ export async function GET() {
   if (!user || user.role !== 'admin') {
     return NextResponse.json({ error: '无权访问' }, { status: 403 });
   }
-  return NextResponse.json(getRolePermissions());
+  return NextResponse.json(await getRolePermissions());
 }
 
 export async function PUT(request: NextRequest) {
@@ -16,6 +16,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ error: '无权访问' }, { status: 403 });
   }
   const body = await request.json();
-  updateRolePermissions(body);
+  await updateRolePermissions(body);
   return NextResponse.json({ success: true });
 }

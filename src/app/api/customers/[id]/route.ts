@@ -5,10 +5,10 @@ import { buildChangeDetail } from '@/lib/audit';
 import type { Customer } from '@/lib/db';
 
 // 检查用户能否看到该客户（基于数据范围）
-function canAccess(user: SessionUser, customer: Customer): boolean {
-  if (hasPermission(user.role, '*')) return true;
+async function canAccess(user: SessionUser, customer: Customer): Promise<boolean> {
+  if (await hasPermission(user.role, '*')) return true;
   if (customer.assigned_to === user.id) return true;
-  const team = getTeamMemberIds(user.id);
+  const team = await getTeamMemberIds(user.id);
   if (team.length > 0 && customer.assigned_to !== null && team.includes(customer.assigned_to)) return true;
   return false;
 }
@@ -21,34 +21,34 @@ export async function GET(
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'customers.view_detail')) {
+  if (!await hasPermission(user.role, 'customers.view_detail')) {
     return NextResponse.json({ error: '无权访问' }, { status: 403 });
   }
 
   const { id } = await context.params;
-  const customer = findCustomerById(parseInt(id));
+  const customer = await findCustomerById(parseInt(id));
 
   if (!customer) {
     return NextResponse.json({ error: '客户不存在' }, { status: 404 });
   }
 
-  if (!canAccess(user, customer)) {
+  if (!await canAccess(user, customer)) {
     return NextResponse.json({ error: '无权访问' }, { status: 403 });
   }
 
-  const followups = listFollowups(parseInt(id));
+  const followups = await listFollowups(parseInt(id));
 
   // 负责人姓名
-  const assignedUser = customer.assigned_to ? findUserById(customer.assigned_to) : null;
+  const assignedUser = customer.assigned_to ? await findUserById(customer.assigned_to) : null;
   const assignedUserName = assignedUser?.name || '未分配';
 
   // 根据权限隐藏手机号和邮箱
-  const canViewPhone = hasPermission(user.role, 'customers.view_phone');
-  const canViewEmail = hasPermission(user.role, 'customers.view_email');
+  const canViewPhone = await hasPermission(user.role, 'customers.view_phone');
+  const canViewEmail = await hasPermission(user.role, 'customers.view_email');
 
   // 用户列表（有分配权限才能看到）
-  const canAssign = hasPermission(user.role, 'customers.assign');
-  const users = canAssign ? listUsers().filter(u => u.role === 'agent' || u.role === 'manager') : [];
+  const canAssign = await hasPermission(user.role, 'customers.assign');
+  const users = canAssign ? (await listUsers()).filter(u => u.role === 'agent' || u.role === 'manager') : [];
 
   return NextResponse.json({
     ...customer,
@@ -57,13 +57,13 @@ export async function GET(
     followups,
     assigned_user_name: assignedUserName,
     users,
-    canEdit: hasPermission(user.role, 'customers.edit'),
-    canEditLevel: hasPermission(user.role, 'customers.edit_level'),
-    canEditInterests: hasPermission(user.role, 'customers.edit_interests'),
-    canEditTags: hasPermission(user.role, 'customers.edit_tags'),
-    canDelete: hasPermission(user.role, 'customers.delete'),
-    canAssign: hasPermission(user.role, 'customers.assign'),
-    canPushToSea: hasPermission(user.role, 'sea_pool.push'),
+    canEdit: await hasPermission(user.role, 'customers.edit'),
+    canEditLevel: await hasPermission(user.role, 'customers.edit_level'),
+    canEditInterests: await hasPermission(user.role, 'customers.edit_interests'),
+    canEditTags: await hasPermission(user.role, 'customers.edit_tags'),
+    canDelete: await hasPermission(user.role, 'customers.delete'),
+    canAssign: await hasPermission(user.role, 'customers.assign'),
+    canPushToSea: await hasPermission(user.role, 'sea_pool.push'),
     assigned_to: customer.assigned_to,
     sea_pool_entered_at: customer.sea_pool_entered_at || null,
   });
@@ -78,13 +78,13 @@ export async function PUT(
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   const { id } = await context.params;
-  const customer = findCustomerById(parseInt(id));
+  const customer = await findCustomerById(parseInt(id));
 
   if (!customer) {
     return NextResponse.json({ error: '客户不存在' }, { status: 404 });
   }
 
-  if (!canAccess(user, customer)) {
+  if (!await canAccess(user, customer)) {
     return NextResponse.json({ error: '无权修改' }, { status: 403 });
   }
 
@@ -92,7 +92,7 @@ export async function PUT(
   const updates: Record<string, unknown> = {};
 
   // 基本信息：需要 customers.edit 权限
-  if (hasPermission(user.role, 'customers.edit')) {
+  if (await hasPermission(user.role, 'customers.edit')) {
     const basicFields = ['contact_name', 'position', 'phone', 'email', 'company_name', 'country', 'source_channel', 'stage', 'notes', 'next_followup_at'];
     for (const f of basicFields) {
       if (body[f] !== undefined) updates[f] = body[f];
@@ -100,22 +100,22 @@ export async function PUT(
   }
 
   // 产品兴趣
-  if (body.product_interests !== undefined && hasPermission(user.role, 'customers.edit_interests')) {
+  if (body.product_interests !== undefined && await hasPermission(user.role, 'customers.edit_interests')) {
     updates.product_interests = JSON.stringify(body.product_interests);
   }
 
   // 标签
-  if (body.tags !== undefined && hasPermission(user.role, 'customers.edit_tags')) {
+  if (body.tags !== undefined && await hasPermission(user.role, 'customers.edit_tags')) {
     updates.tags = JSON.stringify(body.tags);
   }
 
   // 等级
-  if (body.customer_level !== undefined && hasPermission(user.role, 'customers.edit_level')) {
+  if (body.customer_level !== undefined && await hasPermission(user.role, 'customers.edit_level')) {
     updates.customer_level = body.customer_level;
   }
 
   // 分配负责人
-  if (body.assigned_to !== undefined && hasPermission(user.role, 'customers.assign')) {
+  if (body.assigned_to !== undefined && await hasPermission(user.role, 'customers.assign')) {
     updates.assigned_to = body.assigned_to || null;
   }
 
@@ -124,15 +124,15 @@ export async function PUT(
   }
 
   // 保存旧值用于审计
-  const oldSnapshot = getCustomerSnapshot(parseInt(id)) || {};
+  const oldSnapshot = (await getCustomerSnapshot(parseInt(id))) || {};
 
-  updateCustomer(parseInt(id), updates as Parameters<typeof updateCustomer>[1]);
+  await updateCustomer(parseInt(id), updates as Parameters<typeof updateCustomer>[1]);
 
   // 审计日志
   const trackedFields = ['contact_name', 'position', 'phone', 'email', 'company_name', 'country', 'source_channel', 'customer_level', 'stage', 'product_interests', 'tags', 'notes', 'assigned_to', 'next_followup_at'];
   const detail = buildChangeDetail(oldSnapshot, { ...oldSnapshot, ...updates }, trackedFields);
   if (Object.keys(detail).length > 0) {
-    addAuditLog({
+    await addAuditLog({
       user_id: user.id,
       user_name: user.name,
       action: 'customer.update',
@@ -154,24 +154,24 @@ export async function DELETE(
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'customers.delete')) {
+  if (!await hasPermission(user.role, 'customers.delete')) {
     return NextResponse.json({ error: '无权删除' }, { status: 403 });
   }
 
   const { id } = await context.params;
-  const customer = findCustomerById(parseInt(id));
+  const customer = await findCustomerById(parseInt(id));
 
   if (!customer) {
     return NextResponse.json({ error: '客户不存在' }, { status: 404 });
   }
 
-  if (!canAccess(user, customer)) {
+  if (!await canAccess(user, customer)) {
     return NextResponse.json({ error: '无权删除' }, { status: 403 });
   }
 
-  softDeleteCustomer(parseInt(id));
+  await softDeleteCustomer(parseInt(id));
 
-  addAuditLog({
+  await addAuditLog({
     user_id: user.id,
     user_name: user.name,
     action: 'customer.delete',

@@ -7,13 +7,13 @@ export async function GET(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'sea_pool.view')) {
+  if (!await hasPermission(user.role, 'sea_pool.view')) {
     return NextResponse.json({ error: '无权访问' }, { status: 403 });
   }
 
   const { searchParams } = request.nextUrl;
 
-  const result = listSeaPoolCustomers({
+  const result = await listSeaPoolCustomers({
     search: searchParams.get('search') || undefined,
     country: searchParams.get('country') || undefined,
     channel: searchParams.get('channel') || undefined,
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
   });
 
   // 附加原负责人姓名
-  const allUsers = listUsers();
+  const allUsers = await listUsers();
   const userMap: Record<number, string> = {};
   allUsers.forEach(u => { userMap[u.id] = u.name; });
 
@@ -47,7 +47,7 @@ export async function POST(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'sea_pool.push')) {
+  if (!await hasPermission(user.role, 'sea_pool.push')) {
     return NextResponse.json({ error: '无权操作' }, { status: 403 });
   }
 
@@ -58,10 +58,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '请选择客户' }, { status: 400 });
   }
 
-  const count = pushToSeaPool(customer_ids);
+  const count = await pushToSeaPool(customer_ids);
 
   // 审计日志
-  addAuditLog({
+  await addAuditLog({
     user_id: user.id,
     user_name: user.name,
     action: 'customer.sea_push',

@@ -6,7 +6,7 @@ export async function POST(request: NextRequest) {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'sea_pool.claim')) {
+  if (!await hasPermission(user.role, 'sea_pool.claim')) {
     return NextResponse.json({ error: '无权领取' }, { status: 403 });
   }
 
@@ -17,15 +17,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '缺少客户ID' }, { status: 400 });
   }
 
-  const customer = findCustomerById(customer_id);
-  const result = claimSeaCustomer(customer_id, user.id);
+  const customer = await findCustomerById(customer_id);
+  const result = await claimSeaCustomer(customer_id, user.id);
 
   if (!result.success) {
     return NextResponse.json({ error: result.error }, { status: 400 });
   }
 
   // 审计日志
-  addAuditLog({
+  await addAuditLog({
     user_id: user.id,
     user_name: user.name,
     action: 'customer.sea_claim',

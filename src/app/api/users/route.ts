@@ -7,18 +7,18 @@ export async function GET() {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'users.view')) {
+  if (!await hasPermission(user.role, 'users.view')) {
     return NextResponse.json({ error: '无权访问' }, { status: 403 });
   }
 
-  return NextResponse.json(listUsers());
+  return NextResponse.json(await listUsers());
 }
 
 export async function POST(request: NextRequest) {
   const admin = await getSession();
   if (!admin) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(admin.role, 'users.create')) {
+  if (!await hasPermission(admin.role, 'users.create')) {
     return NextResponse.json({ error: '无权操作' }, { status: 403 });
   }
 
@@ -27,12 +27,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '姓名、邮箱、密码必填' }, { status: 400 });
   }
 
-  if (findUserByEmail(email)) {
+  if (await findUserByEmail(email)) {
     return NextResponse.json({ error: '邮箱已存在' }, { status: 400 });
   }
 
   const hash = bcrypt.hashSync(password, 10);
-  createUser({
+  await createUser({
     name,
     email,
     password_hash: hash,
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
   });
 
   // 审计日志
-  addAuditLog({
+  await addAuditLog({
     user_id: admin.id,
     user_name: admin.name,
     action: 'user.create',

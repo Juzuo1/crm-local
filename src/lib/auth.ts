@@ -43,7 +43,7 @@ export async function getSession(): Promise<SessionUser | null> {
 }
 
 export async function login(email: string, password: string): Promise<{ user: SessionUser; token: string } | null> {
-  const user = findUserByEmail(email);
+  const user = await findUserByEmail(email);
   if (!user || !user.is_active) return null;
 
   const valid = bcrypt.compareSync(password, user.password_hash);

@@ -17,19 +17,19 @@ export async function GET() {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  const dataScope = getDataScope(user.role, 'customers');
+  const dataScope = await getDataScope(user.role, 'customers');
   let visibleUserIds: number[] = [];
 
   if (dataScope === 'own') {
     visibleUserIds = [user.id];
   } else if (dataScope === 'department') {
     const { getTeamMemberIds } = await import('@/lib/db');
-    const team = getTeamMemberIds(user.id);
+    const team = await getTeamMemberIds(user.id);
     visibleUserIds = [user.id, ...team];
   }
   // admin: visibleUserIds 为空 → 看全部
 
-  const { data: allCustomers } = listCustomers({
+  const { data: allCustomers } = await listCustomers({
     visibleUserIds: visibleUserIds.length > 0 ? visibleUserIds : undefined,
     pageSize: 10000,
   });

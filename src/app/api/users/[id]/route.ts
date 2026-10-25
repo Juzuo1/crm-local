@@ -12,7 +12,7 @@ export async function PATCH(
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
   const { id } = await context.params;
-  const targetUser = findUserById(parseInt(id));
+  const targetUser = await findUserById(parseInt(id));
   if (!targetUser) {
     return NextResponse.json({ error: '用户不存在' }, { status: 404 });
   }
@@ -22,11 +22,11 @@ export async function PATCH(
 
   switch (action) {
     case 'toggle':
-      if (!hasPermission(user.role, 'users.toggle')) {
+      if (!await hasPermission(user.role, 'users.toggle')) {
         return NextResponse.json({ error: '无权操作' }, { status: 403 });
       }
-      updateUserStatus(parseInt(id), body.is_active ? 1 : 0);
-      addAuditLog({
+      await updateUserStatus(parseInt(id), body.is_active ? 1 : 0);
+      await addAuditLog({
         user_id: user.id,
         user_name: user.name,
         action: 'user.toggle',
@@ -38,18 +38,18 @@ export async function PATCH(
       return NextResponse.json({ success: true });
 
     case 'edit':
-      if (!hasPermission(user.role, 'users.edit')) {
+      if (!await hasPermission(user.role, 'users.edit')) {
         return NextResponse.json({ error: '无权操作' }, { status: 403 });
       }
-      const oldUser = getUserSnapshot(parseInt(id)) || {};
-      updateUser(parseInt(id), {
+      const oldUser = (await getUserSnapshot(parseInt(id))) || {};
+      await updateUser(parseInt(id), {
         name: body.name,
         email: body.email,
         role: body.role,
       });
       const userDetail = buildChangeDetail(oldUser, { ...oldUser, name: body.name, email: body.email, role: body.role }, ['name', 'email', 'role']);
       if (Object.keys(userDetail).length > 0) {
-        addAuditLog({
+        await addAuditLog({
           user_id: user.id,
           user_name: user.name,
           action: 'user.update',
@@ -62,14 +62,14 @@ export async function PATCH(
       return NextResponse.json({ success: true });
 
     case 'reset-password':
-      if (!hasPermission(user.role, 'users.reset_pwd')) {
+      if (!await hasPermission(user.role, 'users.reset_pwd')) {
         return NextResponse.json({ error: '无权操作' }, { status: 403 });
       }
       if (!body.password || body.password.length < 6) {
         return NextResponse.json({ error: '密码至少6位' }, { status: 400 });
       }
-      updateUserPassword(parseInt(id), body.password);
-      addAuditLog({
+      await updateUserPassword(parseInt(id), body.password);
+      await addAuditLog({
         user_id: user.id,
         user_name: user.name,
         action: 'user.reset_pwd',
@@ -81,15 +81,15 @@ export async function PATCH(
       return NextResponse.json({ success: true });
 
     case 'transfer':
-      if (!hasPermission(user.role, 'users.transfer')) {
+      if (!await hasPermission(user.role, 'users.transfer')) {
         return NextResponse.json({ error: '无权操作' }, { status: 403 });
       }
       if (!body.to_user_id) {
         return NextResponse.json({ error: '请选择目标用户' }, { status: 400 });
       }
-      const toUser = findUserById(body.to_user_id);
-      const count = transferCustomers(parseInt(id), body.to_user_id);
-      addAuditLog({
+      const toUser = await findUserById(body.to_user_id);
+      const count = await transferCustomers(parseInt(id), body.to_user_id);
+      await addAuditLog({
         user_id: user.id,
         user_name: user.name,
         action: 'user.transfer',

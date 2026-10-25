@@ -6,16 +6,16 @@ export async function POST() {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  if (!hasPermission(user.role, 'sea_pool.manage_rules')) {
+  if (!await hasPermission(user.role, 'sea_pool.manage_rules')) {
     return NextResponse.json({ error: '无权操作' }, { status: 403 });
   }
 
-  const result = checkSeaPoolFall();
+  const result = await checkSeaPoolFall();
 
   // 审计
   if (result.fell > 0) {
     for (const d of result.details) {
-      addAuditLog({
+      await addAuditLog({
         user_id: user.id,
         user_name: user.name,
         action: 'customer.sea_fall',

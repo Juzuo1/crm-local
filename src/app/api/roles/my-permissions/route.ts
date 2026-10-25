@@ -6,7 +6,7 @@ export async function GET() {
   const user = await getSession();
   if (!user) return NextResponse.json({ error: '未登录' }, { status: 401 });
 
-  const perms = getRolePermissions();
+  const perms = await getRolePermissions();
   const config = perms[user.role];
   if (!config) {
     return NextResponse.json({ role: user.role, permissions: [], dataScopes: {} });
